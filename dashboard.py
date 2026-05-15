@@ -402,8 +402,8 @@ elif page == "🚫 Blocked IPs":
         with col1:
             st.metric("Total Blocked IPs", len(df))
         with col2:
-            ransomware_blocks = len(df[df["Attack Type"] == "Ransomware Deployment"])
-            st.metric("Ransomware Attempts Blocked", ransomware_blocks)
+            critical_blocks = len([d for d in data if float(d[2]) >= 0.85])
+            st.metric("Critical Threats Blocked", critical_blocks)
 
         st.markdown("---")
         st.dataframe(df, use_container_width=True)
@@ -532,13 +532,6 @@ elif page == "🌍 Attack World Map":
         if locations:
             df_map = pd.DataFrame(locations)
 
-            color_map = {
-                "Reconnaissance": "blue",
-                "Brute Force": "orange",
-                "Data Exfiltration": "red",
-                "Ransomware Deployment": "darkred"
-            }
-
             fig = px.scatter_geo(
                 df_map,
                 lat="lat",
@@ -547,7 +540,6 @@ elif page == "🌍 Attack World Map":
                 size="count",
                 hover_name="country",
                 hover_data=["city", "ip", "attack_type", "count"],
-                color_discrete_map=color_map,
                 projection="natural earth",
                 title="Global Attack Origins"
             )
@@ -658,13 +650,7 @@ elif page == "📈 Live Threat Monitor":
             df,
             x="Threat Score",
             color="Attack Type",
-            nbins=20,
-            color_discrete_map={
-                "Reconnaissance": "#00ff88",
-                "Brute Force": "#ffd700",
-                "Data Exfiltration": "#ff8c00",
-                "Ransomware Deployment": "#ff4b4b"
-            }
+            nbins=20
         )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -702,13 +688,7 @@ elif page == "📈 Live Threat Monitor":
                 x="ID",
                 y="Threat Score",
                 color="Attack Type",
-                markers=True,
-                color_discrete_map={
-                    "Reconnaissance": "#00ff88",
-                    "Brute Force": "#ffd700",
-                    "Data Exfiltration": "#ff8c00",
-                    "Ransomware Deployment": "#ff4b4b"
-                }
+                markers=True
             )
             fig2.add_hline(
                 y=0.85,

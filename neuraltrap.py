@@ -347,15 +347,9 @@ def run_llm_classification(session_id):
     except:
         pass
 
-    # Determine blocking threshold
-    if attack_type == "Reconnaissance":
-        block_threshold = 0.95
-    elif attack_type == "Brute Force":
-        block_threshold = 0.90
-    elif attack_type == "Data Exfiltration":
-        block_threshold = 0.85
-    else:
-        block_threshold = 0.80
+    # Determine blocking threshold (base threshold is 0.85)
+    # The LLM's threat_score now fully captures the severity of the dynamic attack type
+    block_threshold = 0.85
 
     if threat_score >= block_threshold and not session["blocked"]:
         print(f"\n🚨 HIGH THREAT DETECTED — {attack_type} | Score: {threat_score:.0%}")

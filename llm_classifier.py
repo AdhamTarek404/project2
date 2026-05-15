@@ -13,7 +13,7 @@ Your job is to deeply analyze the attacker's behavior:
 - What is the overall danger level?
 
 Based on your expert analysis, respond with ONLY a valid JSON object using EXACTLY these field names:
-- attack_type: one of "Reconnaissance", "Brute Force", "Data Exfiltration", "Ransomware Deployment"
+- attack_type: a short, descriptive name for the attack (e.g., "Cryptominer Deployment", "IoT Botnet Recruitment", "Lateral Movement", etc.)
 - threat_score: a float between 0.0 and 1.0 based on how dangerous you assess the session to be
 - confidence: one of "low", "medium", "high"
 - reasoning: a single sentence explaining your classification
@@ -75,16 +75,9 @@ def classify_with_llm(commands_list, session_intel=None):
 def extract_from_text(text):
     result = {}
 
-    attack_types = [
-        "Ransomware Deployment",
-        "Data Exfiltration",
-        "Brute Force",
-        "Reconnaissance"
-    ]
-    for at in attack_types:
-        if at.lower() in text.lower():
-            result["attack_type"] = at
-            break
+    type_match = re.search(r'"attack_type":\s*"([^"]+)"', text)
+    if type_match:
+        result["attack_type"] = type_match.group(1)
 
     score_match = re.search(r'"threat_score":\s*(\d+\.?\d*)', text)
     if score_match:
@@ -115,20 +108,8 @@ def extract_from_text(text):
     return fallback_result()
 
 def validate_result(result):
-    valid_types = [
-        "Reconnaissance",
-        "Brute Force",
-        "Data Exfiltration",
-        "Ransomware Deployment"
-    ]
-
-    if result.get("attack_type") not in valid_types:
-        for key, value in result.items():
-            if isinstance(value, str) and value in valid_types:
-                result["attack_type"] = value
-                break
-        else:
-            result["attack_type"] = "Reconnaissance"
+    if not result.get("attack_type") or not isinstance(result["attack_type"], str):
+        result["attack_type"] = "Unknown Attack"
 
     score = float(result.get("threat_score", 0.1))
     result["threat_score"] = max(0.0, min(1.0, score))
@@ -141,7 +122,7 @@ def validate_result(result):
 
 def fallback_result():
     return {
-        "attack_type": "Reconnaissance",
+        "attack_type": "Unknown Attack",
         "threat_score": 0.1,
         "confidence": "low",
         "reasoning": "Classification failed",

@@ -488,7 +488,9 @@ elif page == "🌍 Attack World Map":
     if not data:
         st.info("No external IPs recorded yet.")
     else:
-        geoip_path = os.path.expanduser("~/cowrie/geoip/GeoLite2-City.mmdb")
+        geoip_path = "geoip/GeoLite2-City.mmdb"
+        if not os.path.exists(geoip_path):
+            geoip_path = os.path.expanduser("~/cowrie/geoip/GeoLite2-City.mmdb")
 
         locations = []
         country_counts = {}

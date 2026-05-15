@@ -588,7 +588,7 @@ echo '{"eventid":"cowrie.command.input","session":"test-token","src_ip":"10.10.1
 
 # 3. Verify trigger in database
 sleep 2
-mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT session_id, trigger_type, token_name, triggered_at FROM honeytoken_triggers WHERE session_id='test-token';"
+mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT session_id, token_type, command_used, created_at FROM honeytoken_triggers WHERE session_id='test-token';"
 ```
 - In the **Streamlit Dashboard**, check for honeytoken activity.
 

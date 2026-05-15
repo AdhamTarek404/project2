@@ -530,7 +530,71 @@ streamlit run dashboard.py --server.port 8501
 
 ---
 
-## 10. Quick Smoke Test Checklist
+## 10. MITRE ATT&CK Mapping
+
+### What it does
+- Extracts MITRE tactics (e.g., `TA0002 Execution`, `TA0003 Persistence`) dynamically from LLM classification and stores them in the DB.
+- Updates the dashboard to display MITRE tactics for each labeled session.
+
+### How to test
+
+```bash
+# Verify MITRE tactics are stored in the database
+mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT session_id, attack_type, mitre_tactics FROM labeled_sessions WHERE mitre_tactics IS NOT NULL LIMIT 5;"
+
+mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT session_id, command, mitre_tactics FROM realtime_scores WHERE mitre_tactics IS NOT NULL LIMIT 5;"
+```
+- In the **Streamlit Dashboard**, check the **AI Predictions** and **Forensic Reports** tabs to see MITRE tactics displayed.
+
+---
+
+## 11. Automated Malware Analysis (`malware_analyzer.py`)
+
+### What it does
+- Analyzes downloaded malware files using basic static analysis and YARA rules.
+- Results are stored in the `malware_analysis` table and displayed in the **Malware Intelligence** dashboard tab.
+
+### How to test
+
+```bash
+# Ensure you have a downloaded file in the Cowrie environment. You can use the simulation from Section 8.
+# Run the analyzer manually (NeuralTrap automatically handles triggering this on downloads)
+python3 malware_analyzer.py
+
+# Verify results in DB
+mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT file_hash, file_name, analysis_status, yara_matches FROM malware_analysis;"
+```
+- Open the **Streamlit Dashboard** and navigate to the **Malware Intelligence** tab to view the analysis reports.
+
+---
+
+## 12. Dynamic Honey-Tokens (`generate_honeytokens.py`)
+
+### What it does
+- Generates deceptive files, processes, and network connections designed to lure attackers.
+- Creates a `honeytokens.json` file for NeuralTrap to monitor.
+- Logs interactions to the `honeytoken_triggers` table.
+
+### How to test
+
+```bash
+# 1. Generate honeytokens
+python3 generate_honeytokens.py
+# Expected: "Honeytokens generated and saved to honeytokens.json"
+
+# 2. Simulate an attacker triggering a honeytoken
+# Make sure neuraltrap.py is running!
+echo '{"eventid":"cowrie.command.input","session":"test-token","src_ip":"10.10.10.10","input":"cat /var/backups/aws_credentials.bak","timestamp":"2026-05-15T10:00:00Z"}' >> ~/cowrie/var/log/cowrie/cowrie.json
+
+# 3. Verify trigger in database
+sleep 2
+mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT session_id, trigger_type, token_name, triggered_at FROM honeytoken_triggers WHERE session_id='test-token';"
+```
+- In the **Streamlit Dashboard**, check for honeytoken activity.
+
+---
+
+## 13. Quick Smoke Test Checklist
 
 ```
 [ ] python3 init_db.py                     → "schema is ready"
@@ -538,6 +602,7 @@ streamlit run dashboard.py --server.port 8501
 [ ] python3 llm_classifier.py              → 4 tests, valid JSON results
 [ ] python3 firewall.py                    → runs without crash
 [ ] python3 forensic_analyst.py            → generates reports (or "no sessions")
+[ ] python3 generate_honeytokens.py        → "Honeytokens generated"
 [ ] python3 neuraltrap.py                  → banner + watching message
 [ ] Simulate attack (unique SID!)          → events appear in output
 [ ] streamlit run dashboard.py             → loads at http://localhost:8501
@@ -546,7 +611,7 @@ streamlit run dashboard.py --server.port 8501
 
 ---
 
-## 11. Common Issues
+## 14. Common Issues
 
 | Issue | Fix |
 |-------|-----|

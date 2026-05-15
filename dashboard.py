@@ -79,7 +79,7 @@ if page == "🏠 Overview":
 
     col1, col2, col3, col4 = st.columns(4)
 
-    total_sessions = run_query("SELECT COUNT(DISTINCT session_id) FROM attack_logs")[0][0]
+    total_sessions = run_query("SELECT COUNT(DISTINCT session_id) FROM attack_logs WHERE event_type='cowrie.command.input'")[0][0]
     total_commands = run_query("SELECT COUNT(*) FROM attack_logs WHERE event_type='cowrie.command.input'")[0][0]
     blocked_ips = run_query("SELECT COUNT(*) FROM blocked_ips")[0][0]
     high_threat = run_query("SELECT COUNT(*) FROM labeled_sessions WHERE threat_score >= 0.85")[0][0]

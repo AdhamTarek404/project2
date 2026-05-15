@@ -93,8 +93,88 @@ st.markdown("""
     hr {
         border-color: rgba(0, 229, 255, 0.2) !important;
     }
+
+    /* === NEW STRUCTURAL HUD CSS === */
+    .cyber-hud-card {
+        background: rgba(16, 20, 30, 0.6);
+        border: 1px solid rgba(0, 229, 255, 0.2);
+        padding: 15px 20px;
+        margin-bottom: 1rem;
+        backdrop-filter: blur(10px);
+        clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .cyber-hud-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.05);
+        pointer-events: none;
+    }
+    .cyber-hud-card:hover {
+        border-color: rgba(0, 229, 255, 0.6);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 229, 255, 0.2);
+    }
+    .cyber-label {
+        font-family: 'Orbitron', sans-serif;
+        color: #8c9eff;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .cyber-value {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+    }
+
+    /* SCI-FI RADIO BUTTONS */
+    div[role="radiogroup"] > label > div:first-child {
+        display: none !important;
+    }
+    div[role="radiogroup"] > label {
+        background: rgba(0, 229, 255, 0.03);
+        border: 1px solid rgba(0, 229, 255, 0.1);
+        border-radius: 4px;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        transition: all 0.3s;
+        width: 100%;
+        cursor: pointer;
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    }
+    div[role="radiogroup"] > label:hover {
+        background: rgba(0, 229, 255, 0.1);
+        border-color: #00e5ff;
+    }
+    div[role="radiogroup"] > label[data-checked="true"], 
+    div[role="radiogroup"] > label[aria-checked="true"] {
+        background: rgba(0, 229, 255, 0.15);
+        border-left: 4px solid #00e5ff;
+        border-right: 1px solid #00e5ff;
+        border-top: 1px solid #00e5ff;
+        border-bottom: 1px solid #00e5ff;
+        box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.2);
+    }
+    div[role="radiogroup"] > label p {
+        font-family: 'Orbitron', sans-serif !important;
+        color: #00e5ff !important;
+        margin: 0;
+        font-size: 1.0rem;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+def cyber_metric(label, value, accent_color="#00e5ff", text_color="#00ff66"):
+    return f"""
+    <div class="cyber-hud-card" style="border-left: 4px solid {accent_color};">
+        <div class="cyber-label">{label}</div>
+        <div class="cyber-value" style="color: {text_color};">{value}</div>
+    </div>
+    """
 
 def run_query(query, params=None):
     db = mysql.connector.connect(
@@ -118,8 +198,8 @@ st.sidebar.title("NeuralTrap")
 st.sidebar.markdown("**AI Deception Network**")
 st.sidebar.markdown("---")
 
-page = st.sidebar.selectbox(
-    "Navigation",
+page = st.sidebar.radio(
+    "SYSTEM SYSTEMS",
     ["🏠 Overview", "⚔️ Live Attacks", "🔬 Cowrie Intel",
      "🧠 AI Predictions",
      "📋 Forensic Reports", "🚫 Blocked IPs", "👤 Attacker Profiles",
@@ -148,10 +228,10 @@ if page == "🏠 Overview":
     blocked_ips = run_query("SELECT COUNT(*) FROM blocked_ips")[0][0]
     high_threat = run_query("SELECT COUNT(*) FROM labeled_sessions WHERE threat_score >= 0.85")[0][0]
 
-    col1.metric("Total Sessions", total_sessions, "Active")
-    col2.metric("Commands Captured", total_commands)
-    col3.metric("IPs Blocked", blocked_ips, "Auto-blocked")
-    col4.metric("High Threat Sessions", high_threat, ">=85% score")
+    col1.markdown(cyber_metric("Total Sessions", total_sessions), unsafe_allow_html=True)
+    col2.markdown(cyber_metric("Commands Captured", total_commands), unsafe_allow_html=True)
+    col3.markdown(cyber_metric("IPs Blocked", blocked_ips, "#ff2a2a", "#ff2a2a"), unsafe_allow_html=True)
+    col4.markdown(cyber_metric("High Threat Sessions", high_threat, "#ff2a2a", "#ff2a2a"), unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -282,13 +362,13 @@ elif page == "🔬 Cowrie Intel":
     avg_dwell = safe_query("SELECT AVG(dwell_seconds) FROM session_summary", cols=["v"])
 
     if la is not None:
-        c1.metric("Login events", int(la["n"].iloc[0]))
+        c1.markdown(cyber_metric("Login events", int(la["n"].iloc[0])), unsafe_allow_html=True)
     if ft is not None:
-        c2.metric("File transfers", int(ft["n"].iloc[0]))
+        c2.markdown(cyber_metric("File transfers", int(ft["n"].iloc[0])), unsafe_allow_html=True)
     if ss is not None:
-        c3.metric("Sessions summarized", int(ss["n"].iloc[0]))
+        c3.markdown(cyber_metric("Sessions summarized", int(ss["n"].iloc[0])), unsafe_allow_html=True)
     if avg_dwell is not None and avg_dwell["v"].iloc[0] is not None:
-        c4.metric("Avg dwell (s)", f"{float(avg_dwell['v'].iloc[0]):.1f}")
+        c4.markdown(cyber_metric("Avg dwell (s)", f"{float(avg_dwell['v'].iloc[0]):.1f}"), unsafe_allow_html=True)
 
     st.subheader("Recent login & pubkey events")
     df_logins = safe_query(
@@ -460,12 +540,11 @@ elif page == "🚫 Blocked IPs":
         df = pd.DataFrame(data, columns=["IP Address", "Attack Type", "Threat Score", "Blocked At", "Reason"])
         df["Threat Score"] = df["Threat Score"].apply(lambda x: f"{x:.0%}")
 
-        col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Blocked IPs", len(df))
+            st.markdown(cyber_metric("Total Blocked IPs", len(df), "#bd00ff"), unsafe_allow_html=True)
         with col2:
             critical_blocks = len([d for d in data if float(d[2]) >= 0.85])
-            st.metric("Critical Threats Blocked", critical_blocks)
+            st.markdown(cyber_metric("Critical Threats Blocked", critical_blocks, "#ff2a2a", "#ff2a2a"), unsafe_allow_html=True)
 
         st.markdown("---")
         st.dataframe(df, use_container_width=True)
@@ -519,11 +598,11 @@ elif page == "👤 Attacker Profiles":
             with st.expander(f"{status} — {src_ip} ({sessions} session(s))"):
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Sessions", sessions)
+                    st.markdown(cyber_metric("Sessions", sessions, "#bd00ff"), unsafe_allow_html=True)
                 with col2:
-                    st.metric("Avg Threat", f"{avg_threat:.0%}")
+                    st.markdown(cyber_metric("Avg Threat", f"{avg_threat:.0%}", "#bd00ff"), unsafe_allow_html=True)
                 with col3:
-                    st.metric("Max Threat", f"{max_threat:.0%}")
+                    st.markdown(cyber_metric("Max Threat", f"{max_threat:.0%}", "#ff2a2a", "#ff2a2a"), unsafe_allow_html=True)
 
                 st.write(f"**Attack Types:** {attack_types}")
                 st.progress(float(max_threat))
@@ -648,11 +727,10 @@ elif page == "🌍 Attack World Map":
                 )
                 st.plotly_chart(fig2, use_container_width=True)
 
-            col1, col2 = st.columns(2)
             with col1:
-                st.metric("Countries Detected", len(country_counts))
+                st.markdown(cyber_metric("Countries Detected", len(country_counts), "#00e5ff"), unsafe_allow_html=True)
             with col2:
-                st.metric("Mapped Attack Sources", len(locations))
+                st.markdown(cyber_metric("Mapped Attack Sources", len(locations), "#00e5ff"), unsafe_allow_html=True)
 
         else:
             st.warning("Could not map any IPs. Make sure GeoIP database is downloaded.")
@@ -680,23 +758,27 @@ elif page == "📈 Live Threat Monitor":
 
             if threat_score >= 0.85:
                 color = "🔴"
+                hex_color = "#ff2a2a"
                 status = "BLOCKED"
             elif threat_score >= 0.50:
                 color = "🟠"
+                hex_color = "#ff8c00"
                 status = "HIGH RISK"
             elif threat_score >= 0.25:
                 color = "🟡"
+                hex_color = "#fce803"
                 status = "MONITORING"
             else:
                 color = "🟢"
+                hex_color = "#00ff66"
                 status = "LOW RISK"
 
             st.markdown(f"### {color} {src_ip} — {status}")
 
             col1, col2 = st.columns([1, 3])
             with col1:
-                st.metric("Threat Score", f"{threat_score:.0%}")
-                st.metric("Attack Type", attack_type)
+                st.markdown(cyber_metric("Threat Score", f"{threat_score:.0%}", hex_color, hex_color), unsafe_allow_html=True)
+                st.markdown(cyber_metric("Attack Type", attack_type, hex_color), unsafe_allow_html=True)
             with col2:
                 st.progress(float(threat_score))
                 st.write(f"**Commands:** {commands[:150]}...")
@@ -818,10 +900,10 @@ elif page == "📈 Live Threat Monitor":
     low_threat = run_query("SELECT COUNT(*) FROM labeled_sessions WHERE threat_score < 0.50")[0][0]
     avg_threat = run_query("SELECT AVG(threat_score) FROM labeled_sessions")[0][0]
 
-    col1.metric("🔴 High Threat", high_threat, ">=85%")
-    col2.metric("🟠 Medium Threat", med_threat, "50-85%")
-    col3.metric("🟢 Low Threat", low_threat, "<50%")
-    col4.metric("📊 Avg Threat Score", f"{avg_threat:.0%}" if avg_threat else "0%")
+    col1.markdown(cyber_metric("🔴 High Threat", high_threat, "#ff2a2a", "#ff2a2a"), unsafe_allow_html=True)
+    col2.markdown(cyber_metric("🟠 Medium Threat", med_threat, "#ff8c00", "#ff8c00"), unsafe_allow_html=True)
+    col3.markdown(cyber_metric("🟢 Low Threat", low_threat, "#00ff66", "#00ff66"), unsafe_allow_html=True)
+    col4.markdown(cyber_metric("📊 Avg Threat Score", f"{avg_threat:.0%}" if avg_threat else "0%", "#00e5ff"), unsafe_allow_html=True)
 
 # ============================================================
 # MALWARE INTELLIGENCE PAGE
@@ -885,8 +967,8 @@ elif page == "🍯 Honeytoken Activity":
         
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Honeytoken Triggers", len(df))
+            st.markdown(cyber_metric("Total Honeytoken Triggers", len(df), "#bd00ff"), unsafe_allow_html=True)
         with col2:
-            st.metric("Unique IPs Trapped", df["Source IP"].nunique())
+            st.markdown(cyber_metric("Unique IPs Trapped", df["Source IP"].nunique(), "#bd00ff"), unsafe_allow_html=True)
 
         st.dataframe(df, use_container_width=True)

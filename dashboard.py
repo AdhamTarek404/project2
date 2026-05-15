@@ -217,7 +217,7 @@ elif page == "🔬 Cowrie Intel":
     la = safe_query("SELECT COUNT(*) FROM login_attempts", cols=["n"])
     ft = safe_query("SELECT COUNT(*) FROM file_transfers", cols=["n"])
     ss = safe_query("SELECT COUNT(*) FROM session_summary", cols=["n"])
-    avg_dwell = safe_query("SELECT AVG(dwell_seconds) FROM session_summary WHERE dwell_seconds IS NOT NULL", cols=["v"])
+    avg_dwell = safe_query("SELECT AVG(dwell_seconds) FROM session_summary", cols=["v"])
 
     if la is not None:
         c1.metric("Login events", int(la["n"].iloc[0]))
@@ -248,7 +248,7 @@ elif page == "🔬 Cowrie Intel":
     st.subheader("Recent file uploads & downloads")
     df_files = safe_query(
         """
-        SELECT id, direction, src_ip, url, filename, outfile, shasum, session_id, logged_at
+        SELECT id, direction, src_ip, url, filename, `outfile`, shasum, session_id, logged_at
         FROM file_transfers
         ORDER BY id DESC
         LIMIT 80

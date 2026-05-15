@@ -18,8 +18,9 @@ Based on your expert analysis, respond with ONLY a valid JSON object using EXACT
 - confidence: one of "low", "medium", "high"
 - reasoning: a single sentence explaining your classification
 - predicted_next: the most likely next command the attacker will type
+- mitre_tactics: a list of strings representing MITRE ATT&CK Technique IDs (e.g., ["T1059.004", "T1082"])
 
-NEVER use any field names other than the five listed above.
+NEVER use any field names other than the six listed above.
 NEVER add any text outside the JSON object.
 Classify based on your own cybersecurity expertise — analyze the full attack chain."""
 
@@ -98,11 +99,22 @@ def extract_from_text(text):
     if confidence_match:
         result["confidence"] = confidence_match.group(1)
 
+    mitre_match = re.search(r'"mitre_tactics":\s*\[(.*?)\]', text, re.DOTALL)
+    if mitre_match:
+        try:
+            # Try to safely parse the array strings
+            import ast
+            arr_str = f"[{mitre_match.group(1)}]"
+            result["mitre_tactics"] = ast.literal_eval(arr_str)
+        except Exception:
+            result["mitre_tactics"] = []
+
     if result.get("attack_type"):
         result.setdefault("threat_score", 0.5)
         result.setdefault("confidence", "medium")
         result.setdefault("reasoning", "Extracted from response")
         result.setdefault("predicted_next", "unknown")
+        result.setdefault("mitre_tactics", [])
         return result
 
     return fallback_result()
@@ -117,6 +129,8 @@ def validate_result(result):
     result.setdefault("confidence", "medium")
     result.setdefault("reasoning", "No reasoning provided")
     result.setdefault("predicted_next", "unknown")
+    if not isinstance(result.get("mitre_tactics"), list):
+        result["mitre_tactics"] = []
 
     return result
 
@@ -126,7 +140,8 @@ def fallback_result():
         "threat_score": 0.1,
         "confidence": "low",
         "reasoning": "Classification failed",
-        "predicted_next": "unknown"
+        "predicted_next": "unknown",
+        "mitre_tactics": []
     }
 
 _score_cache = {}

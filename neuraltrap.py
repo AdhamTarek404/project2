@@ -9,6 +9,7 @@ import threading
 import os
 from datetime import datetime
 from llm_classifier import classify_with_llm, rule_based_score
+from malware_analyzer import analyze_payload_async
 from cowrie_context import (
     new_session_state,
     parse_cowrie_timestamp,
@@ -131,8 +132,8 @@ def _persist_labeled_session(cursor, db, session_id, src_ip, commands_str, attac
             """
             INSERT IGNORE INTO labeled_sessions
             (session_id, src_ip, commands, attack_type, threat_score,
-             dwell_seconds, client_version, hassh, tty_log_path)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+             dwell_seconds, client_version, hassh, tty_log_path, mitre_tactics)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """,
             (
                 session_id,
@@ -144,6 +145,7 @@ def _persist_labeled_session(cursor, db, session_id, src_ip, commands_str, attac
                 session.get("client_version"),
                 session.get("hassh"),
                 tty_path,
+                session.get("mitre_tactics", "[]"),
             ),
         )
         db.commit()
@@ -320,6 +322,7 @@ def run_llm_classification(session_id):
     session["predicted_next"] = predicted_next
     session["reasoning"] = reasoning
     session["confidence"] = confidence
+    session["mitre_tactics"] = json.dumps(result.get("mitre_tactics", []))
 
     print(f"  🎯 LLM Result: {attack_type} | Score: {threat_score:.0%} | Confidence: {confidence}")
     print(f"  🔮 Predicted next: {predicted_next}")
@@ -335,13 +338,14 @@ def run_llm_classification(session_id):
         cursor.execute("""
             INSERT INTO realtime_scores
             (session_id, src_ip, command, attack_type,
-             threat_score, predicted_next, command_number)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+             threat_score, predicted_next, command_number, mitre_tactics)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             session_id, src_ip,
             commands[-1] if commands else "",
             attack_type, threat_score,
-            predicted_next, num_commands
+            predicted_next, num_commands,
+            session["mitre_tactics"]
         ))
         db.commit()
     except:
@@ -620,6 +624,10 @@ class LogHandler(FileSystemEventHandler):
             except Exception:
                 pass
             print(f"  ⬇️  [{session_id[:8]}] download {data.get('url') or data.get('outfile')}")
+            
+            # Trigger Malware Analyzer for the downloaded payload
+            if data.get("shasum") and data.get("url"):
+                analyze_payload_async(data.get("shasum"), session_id, data.get("url"))
 
         elif event_id == "cowrie.session.file_upload" and session_id:
             sess = _ensure_active_session(session_id, src_ip)
@@ -677,6 +685,30 @@ class LogHandler(FileSystemEventHandler):
 
             session = active_sessions[session_id]
             session["commands"].append(command)
+
+            # Honeytoken Detection
+            honeytokens = {
+                "id_rsa": "SSH Private Key",
+                ".aws/credentials": "AWS Credentials",
+                "wp-config.php": "Database Config"
+            }
+            for ht_path, ht_name in honeytokens.items():
+                if ht_path in command:
+                    print(f"  🍯 HONEYTOKEN TRIGGERED: {ht_name} via '{command}'")
+                    try:
+                        cursor.execute("""
+                            INSERT INTO honeytoken_triggers (session_id, src_ip, token_type, command_used)
+                            VALUES (%s, %s, %s, %s)
+                        """, (session_id, src_ip, ht_name, command))
+                        db.commit()
+                    except:
+                        pass
+                    # Instantly flag as critical
+                    session["threat_score"] = 1.0
+                    session["attack_type"] = "Honeytoken Triggered"
+                    block_ip(src_ip, "Honeytoken Triggered", 1.0, session_id)
+                    session["blocked"] = True
+                    break
 
             if session["blocked"]:
                 return

@@ -15,6 +15,7 @@ def ensure_schema(cursor, db):
             threat_score FLOAT,
             predicted_next TEXT,
             command_number INT,
+            mitre_tactics TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -78,8 +79,29 @@ def ensure_schema(cursor, db):
             client_version VARCHAR(512) NULL,
             hassh VARCHAR(128) NULL,
             tty_log_path VARCHAR(1024) NULL,
+            mitre_tactics TEXT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY uq_session (session_id)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS malware_analysis (
+            shasum VARCHAR(128) PRIMARY KEY,
+            session_id VARCHAR(100),
+            url TEXT,
+            analysis_report TEXT,
+            iocs TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS honeytoken_triggers (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            session_id VARCHAR(100),
+            src_ip VARCHAR(50),
+            token_type VARCHAR(100),
+            command_used TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     cursor.execute("""
@@ -108,6 +130,8 @@ def ensure_schema(cursor, db):
         "ALTER TABLE labeled_sessions ADD COLUMN client_version VARCHAR(512) NULL",
         "ALTER TABLE labeled_sessions ADD COLUMN hassh VARCHAR(128) NULL",
         "ALTER TABLE labeled_sessions ADD COLUMN tty_log_path VARCHAR(1024) NULL",
+        "ALTER TABLE labeled_sessions ADD COLUMN mitre_tactics TEXT NULL",
+        "ALTER TABLE realtime_scores ADD COLUMN mitre_tactics TEXT NULL",
     ):
         try:
             cursor.execute(alter)

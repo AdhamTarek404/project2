@@ -59,7 +59,7 @@ page = st.sidebar.selectbox(
     ["🏠 Overview", "⚔️ Live Attacks", "🔬 Cowrie Intel",
      "🧠 AI Predictions",
      "📋 Forensic Reports", "🚫 Blocked IPs", "👤 Attacker Profiles",
-     "🌍 Attack World Map", "📈 Live Threat Monitor"]
+     "🌍 Attack World Map", "📈 Live Threat Monitor", "🦠 Malware Intelligence", "🍯 Honeytoken Activity"]
 )
 
 st.sidebar.markdown("---")
@@ -603,7 +603,7 @@ elif page == "📈 Live Threat Monitor":
     st.markdown("---")
 
     data = run_query("""
-        SELECT session_id, src_ip, attack_type, threat_score, commands
+        SELECT session_id, src_ip, attack_type, threat_score, commands, mitre_tactics
         FROM labeled_sessions
         ORDER BY id DESC
         LIMIT 20
@@ -613,7 +613,7 @@ elif page == "📈 Live Threat Monitor":
         st.subheader("Recent Session Threat Scores")
 
         for row in data[:5]:
-            session_id, src_ip, attack_type, threat_score, commands = row
+            session_id, src_ip, attack_type, threat_score, commands, mitre_tactics = row
 
             if threat_score >= 0.85:
                 color = "🔴"
@@ -637,14 +637,50 @@ elif page == "📈 Live Threat Monitor":
             with col2:
                 st.progress(float(threat_score))
                 st.write(f"**Commands:** {commands[:150]}...")
+                if mitre_tactics and mitre_tactics != "[]":
+                    import json
+                    try:
+                        tactics = json.loads(mitre_tactics)
+                        if tactics:
+                            st.write(f"**MITRE Tactics:** `{', '.join(tactics)}`")
+                    except:
+                        pass
 
             st.markdown("---")
 
         st.subheader("Threat Score Distribution")
 
         df = pd.DataFrame(data, columns=[
-            "Session ID", "IP", "Attack Type", "Threat Score", "Commands"
+            "Session ID", "IP", "Attack Type", "Threat Score", "Commands", "MITRE Tactics"
         ])
+
+        # Render MITRE Tactics Heatmap
+        import json
+        all_tactics = []
+        for tactics_str in df["MITRE Tactics"].dropna():
+            if tactics_str and tactics_str != "[]":
+                try:
+                    tactics = json.loads(tactics_str)
+                    all_tactics.extend(tactics)
+                except:
+                    pass
+        
+        if all_tactics:
+            st.subheader("MITRE ATT&CK Tactic Frequency")
+            tactic_counts = pd.Series(all_tactics).value_counts().reset_index()
+            tactic_counts.columns = ["Tactic ID", "Count"]
+            
+            fig_mitre = px.bar(
+                tactic_counts,
+                x="Count",
+                y="Tactic ID",
+                orientation='h',
+                title="MITRE Techniques Identified by AI",
+                color="Count",
+                color_continuous_scale="Reds"
+            )
+            fig_mitre.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="white")
+            st.plotly_chart(fig_mitre, use_container_width=True)
 
         fig = px.histogram(
             df,
@@ -722,4 +758,72 @@ elif page == "📈 Live Threat Monitor":
     col1.metric("🔴 High Threat", high_threat, ">=85%")
     col2.metric("🟠 Medium Threat", med_threat, "50-85%")
     col3.metric("🟢 Low Threat", low_threat, "<50%")
-    col4.metric("📊 Avg Threat Score", f"{avg_threat:.0%}")
+    col4.metric("📊 Avg Threat Score", f"{avg_threat:.0%}" if avg_threat else "0%")
+
+# ============================================================
+# MALWARE INTELLIGENCE PAGE
+# ============================================================
+elif page == "🦠 Malware Intelligence":
+    st.title("🦠 Malware Intelligence")
+    st.markdown("Automated AI-driven reverse engineering of downloaded payloads.")
+    st.markdown("---")
+
+    data = run_query("""
+        SELECT shasum, session_id, url, analysis_report, iocs, created_at
+        FROM malware_analysis
+        ORDER BY created_at DESC
+        LIMIT 50
+    """)
+
+    if not data:
+        st.info("No malware payloads have been analyzed yet.")
+    else:
+        for row in data:
+            shasum, session_id, url, report, iocs, created_at = row
+            st.markdown(f"### Payload: `{shasum[:16]}...`")
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                st.write(f"**Session ID:** `{session_id[:8]}`")
+                st.write(f"**Captured At:** `{created_at}`")
+                st.write(f"**Source URL:** `{url}`")
+                
+                try:
+                    import json
+                    ioc_list = json.loads(iocs)
+                    if ioc_list:
+                        st.write("**Extracted IOCs:**")
+                        for ioc in ioc_list:
+                            st.code(ioc)
+                except:
+                    pass
+            with col2:
+                st.info(f"**AI Analysis Report:**\n\n{report}")
+            st.markdown("---")
+
+# ============================================================
+# HONEYTOKEN ACTIVITY PAGE
+# ============================================================
+elif page == "🍯 Honeytoken Activity":
+    st.title("🍯 Honeytoken Activity")
+    st.markdown("Alerts triggered when attackers interact with AI-generated fake lures.")
+    st.markdown("---")
+
+    data = run_query("""
+        SELECT session_id, src_ip, token_type, command_used, created_at
+        FROM honeytoken_triggers
+        ORDER BY created_at DESC
+        LIMIT 50
+    """)
+
+    if not data:
+        st.info("No honeytoken triggers detected yet. Run `generate_honeytokens.py` to seed the honeypot.")
+    else:
+        df = pd.DataFrame(data, columns=["Session ID", "Source IP", "Token Type", "Command Used", "Triggered At"])
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Total Honeytoken Triggers", len(df))
+        with col2:
+            st.metric("Unique IPs Trapped", df["Source IP"].nunique())
+
+        st.dataframe(df, use_container_width=True)

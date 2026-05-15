@@ -69,18 +69,8 @@ st.markdown("""
     ::-webkit-scrollbar-thumb { background: #00e5ff; box-shadow: 0 0 10px #00e5ff; border-radius: 0px; }
     ::-webkit-scrollbar-corner { background: #050608; }
 
-    /* GLITCH TEXT EFFECT FOR TITLES */
-    @keyframes glitch {
-        0% { clip-path: inset(10% 0 30% 0); transform: translate(-2px, 1px); }
-        20% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -1px); }
-        40% { clip-path: inset(40% 0 20% 0); transform: translate(-2px, 2px); }
-        60% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -2px); }
-        80% { clip-path: inset(50% 0 30% 0); transform: translate(-1px, 1px); }
-        100% { clip-path: inset(30% 0 10% 0); transform: translate(1px, -1px); }
-    }
-
+    /* STATIC NEON TEXT FOR TITLES (Glitch Removed) */
     .glitch-text {
-        position: relative;
         font-family: 'Orbitron', sans-serif !important;
         color: #00e5ff !important;
         text-transform: uppercase;
@@ -89,20 +79,6 @@ st.markdown("""
         text-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
         display: inline-block;
         margin-bottom: 20px;
-    }
-    .glitch-text::before, .glitch-text::after {
-        content: attr(data-text);
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: #050608;
-    }
-    .glitch-text::before {
-        left: 2px; text-shadow: -2px 0 #ff2a2a;
-        animation: glitch 3s infinite linear alternate-reverse;
-    }
-    .glitch-text::after {
-        left: -2px; text-shadow: -2px 0 #00ff66;
-        animation: glitch 2.5s infinite linear alternate-reverse;
     }
 
     /* STANDARD HEADERS */
@@ -228,6 +204,24 @@ st.markdown("""
         margin: 0;
         font-size: 1.1rem;
         text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+
+    /* MAKE SIDEBAR TOGGLE BUTTON VISIBLE */
+    button[kind="header"] {
+        color: #00e5ff !important;
+        background-color: rgba(0, 229, 255, 0.1) !important;
+        border-radius: 5px;
+        border: 1px solid rgba(0, 229, 255, 0.3) !important;
+    }
+    button[kind="header"]:hover {
+        box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+    }
+    [data-testid="collapsedControl"] {
+        color: #00e5ff !important;
+        background-color: rgba(0, 229, 255, 0.1) !important;
+        border-radius: 5px;
+        border: 1px solid rgba(0, 229, 255, 0.3) !important;
+        z-index: 99999;
     }
 
     /* HACKER TERMINAL FEED */

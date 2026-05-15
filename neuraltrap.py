@@ -706,8 +706,32 @@ class LogHandler(FileSystemEventHandler):
                     # Instantly flag as critical
                     session["threat_score"] = 1.0
                     session["attack_type"] = "Honeytoken Triggered"
+                    session["predicted_next"] = "Data exfiltration and lateral movement."
+                    session["reasoning"] = f"Attacker explicitly interacted with deceptive file: {ht_name}"
+                    session["mitre_tactics"] = json.dumps(["TA0006 Credential Access"])
+
                     block_ip(src_ip, "Honeytoken Triggered", 1.0, session_id)
                     session["blocked"] = True
+
+                    commands_str = " ".join(session["commands"])
+                    intel = format_session_intel_for_llm(session)
+
+                    try:
+                        _persist_labeled_session(
+                            cursor, db, session_id, src_ip, 
+                            commands_str, session["attack_type"], 1.0, session
+                        )
+                    except Exception:
+                        pass
+
+                    report_thread = threading.Thread(
+                        target=generate_report,
+                        args=(session_id, src_ip, session["attack_type"], 1.0,
+                              commands_str, session["predicted_next"], session["reasoning"], intel)
+                    )
+                    report_thread.daemon = True
+                    report_thread.start()
+
                     break
 
             if session["blocked"]:

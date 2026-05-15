@@ -17,17 +17,81 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    .main {background-color: #0e1117;}
-    .metric-card {
-        background-color: #1e2329;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 4px solid #ff4b4b;
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    .main {
+        background-color: #0a0b10 !important;
+        background-image: 
+            linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+        background-size: 30px 30px;
     }
-    .stMetric {
-        background-color: #1e2329;
-        padding: 10px;
+    h1, h2, h3 {
+        font-family: 'Orbitron', sans-serif !important;
+        color: #00e5ff !important;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    }
+    section[data-testid="stSidebar"] {
+        background-color: #11131a !important;
+        border-right: 1px solid rgba(177, 66, 255, 0.2);
+    }
+    [data-testid="stMetricValue"] {
+        font-family: 'Rajdhani', sans-serif !important;
+        font-size: 2.5rem !important;
+        font-weight: bold;
+        color: #00ff66 !important;
+        text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+    }
+    [data-testid="stMetricLabel"] {
+        font-family: 'Orbitron', sans-serif !important;
+        color: #8c9eff !important;
+        letter-spacing: 1px;
+    }
+    div[data-testid="metric-container"] {
+        background: rgba(16, 20, 30, 0.6);
+        border: 1px solid rgba(0, 229, 255, 0.2);
+        padding: 15px 20px;
         border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 229, 255, 0.05);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    div[data-testid="metric-container"]:hover {
+        border-color: rgba(0, 229, 255, 0.6);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 229, 255, 0.2);
+    }
+    .stDataFrame {
+        border: 1px solid rgba(177, 66, 255, 0.3);
+        border-radius: 5px;
+    }
+    .streamlit-expanderHeader {
+        font-family: 'Rajdhani', sans-serif;
+        color: #00e5ff !important;
+        background-color: rgba(177, 66, 255, 0.1) !important;
+        border-radius: 5px;
+        border: 1px solid rgba(177, 66, 255, 0.3) !important;
+    }
+    .terminal-feed {
+        font-family: 'Courier New', monospace;
+        color: #00ff66;
+        background-color: #050505;
+        border-left: 3px solid #00ff66;
+        padding: 10px;
+        margin-bottom: 5px;
+        border-radius: 0 5px 5px 0;
+        box-shadow: 0 0 10px rgba(0, 255, 102, 0.1);
+    }
+    .terminal-feed.danger {
+        color: #ff2a2a;
+        border-left-color: #ff2a2a;
+        background-color: rgba(255, 42, 42, 0.05);
+        box-shadow: 0 0 10px rgba(255, 42, 42, 0.1);
+    }
+    hr {
+        border-color: rgba(0, 229, 255, 0.2) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -104,7 +168,7 @@ if page == "🏠 Overview":
             df = pd.DataFrame(data, columns=["Attack Type", "Count"])
             fig = px.pie(
                 df, values="Count", names="Attack Type",
-                color_discrete_sequence=["#ff4b4b", "#ff8c00", "#ffd700", "#00ff88"],
+                color_discrete_sequence=["#00e5ff", "#bd00ff", "#ff2a2a", "#00ff66", "#fce803"],
                 hole=0.4
             )
             fig.update_layout(
@@ -127,7 +191,7 @@ if page == "🏠 Overview":
             fig = px.bar(
                 df, x="Attack Type", y="Avg Threat Score",
                 color="Avg Threat Score",
-                color_continuous_scale=["green", "yellow", "red"],
+                color_continuous_scale=["#00ff66", "#bd00ff", "#ff2a2a"],
                 labels={"Avg Threat Score": "Avg Threat Score (%)"}
             )
             fig.update_layout(
@@ -175,16 +239,14 @@ elif page == "⚔️ Live Attacks":
             cmd = row["Command"].lower()
             is_dangerous = any(d in cmd for d in dangerous)
 
-            col1, col2, col3 = st.columns([2, 2, 4])
+            col1, col2 = st.columns([2, 6])
             with col1:
-                st.write(f"🌐 {row['IP Address']}")
+                st.write(f"🌐 `{row['IP Address']}`\n\n*(Session: {row['Session ID'][:8]})*")
             with col2:
                 if is_dangerous:
-                    st.error(f"⚠️ {row['Command']}")
+                    st.markdown(f"<div class='terminal-feed danger'>[ROOT@HONEYPOT:~]# {row['Command']}</div>", unsafe_allow_html=True)
                 else:
-                    st.success(f"✅ {row['Command']}")
-            with col3:
-                st.write(f"Session: {row['Session ID']}")
+                    st.markdown(f"<div class='terminal-feed'>[USER@HONEYPOT:~]$ {row['Command']}</div>", unsafe_allow_html=True)
     else:
         st.info("No attack data yet.")
 
@@ -412,8 +474,7 @@ elif page == "🚫 Blocked IPs":
         attack_counts.columns = ["Attack Type", "Count"]
         fig = px.bar(
             attack_counts, x="Attack Type", y="Count",
-            color="Attack Type",
-            color_discrete_sequence=["#ff4b4b", "#ff8c00", "#ffd700", "#00ff88"]
+            color_discrete_sequence=["#00e5ff", "#bd00ff", "#ff2a2a", "#00ff66"]
         )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
@@ -553,13 +614,13 @@ elif page == "🌍 Attack World Map":
                 geo=dict(
                     bgcolor="rgba(0,0,0,0)",
                     showland=True,
-                    landcolor="rgb(50,50,50)",
+                    landcolor="#13151c",
                     showocean=True,
-                    oceancolor="rgb(20,20,40)",
+                    oceancolor="#0a0b10",
                     showlakes=True,
-                    lakecolor="rgb(20,20,40)",
+                    lakecolor="#0a0b10",
                     showcountries=True,
-                    countrycolor="rgb(100,100,100)"
+                    countrycolor="#bd00ff"
                 ),
                 height=600
             )
@@ -578,7 +639,7 @@ elif page == "🌍 Attack World Map":
                     x="Country",
                     y="Attack Count",
                     color="Attack Count",
-                    color_continuous_scale=["yellow", "orange", "red"]
+                    color_continuous_scale=["#00e5ff", "#bd00ff", "#ff2a2a"]
                 )
                 fig2.update_layout(
                     paper_bgcolor="rgba(0,0,0,0)",
@@ -679,7 +740,7 @@ elif page == "📈 Live Threat Monitor":
                 orientation='h',
                 title="MITRE Techniques Identified by AI",
                 color="Count",
-                color_continuous_scale="Reds"
+                color_continuous_scale=["#00e5ff", "#bd00ff", "#ff2a2a"]
             )
             fig_mitre.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="white")
             st.plotly_chart(fig_mitre, use_container_width=True)
@@ -700,7 +761,7 @@ elif page == "📈 Live Threat Monitor":
         fig.add_vline(
             x=0.85,
             line_dash="dash",
-            line_color="red",
+            line_color="#ff2a2a",
             annotation_text="Block Threshold (85%)",
             annotation_position="top"
         )
@@ -731,7 +792,7 @@ elif page == "📈 Live Threat Monitor":
             fig2.add_hline(
                 y=0.85,
                 line_dash="dash",
-                line_color="red",
+                line_color="#ff2a2a",
                 annotation_text="Block Threshold"
             )
             fig2.update_layout(

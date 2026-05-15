@@ -158,17 +158,24 @@ def rule_based_score(command):
         return _score_cache[cmd_key]
 
     prompt = (
-        f'Rate the threat level of this SSH honeypot command as a float 0.0 to 1.0.\n'
-        f'0.0=harmless, 0.2=basic recon, 0.4=suspicious, 0.7=dangerous, 1.0=critical malware/ransomware.\n'
-        f'Command: {command}\n'
-        f'Respond with ONLY a JSON object: {{"score": 0.XX, "reason": "short reason"}}'
+        f'You are a cybersecurity expert analyzing commands captured in an SSH honeypot.\n'
+        f'A command was just executed by an attacker who connected to our honeypot.\n\n'
+        f'Command: {command}\n\n'
+        f'Analyze this command deeply:\n'
+        f'- What does this command actually do?\n'
+        f'- What system resources or sensitive data does it access?\n'
+        f'- What could an attacker achieve with this?\n'
+        f'- How dangerous is this in a real attack scenario?\n\n'
+        f'Based on your analysis, assign a threat score from 0.0 (completely harmless) '
+        f'to 1.0 (critical threat / active exploitation).\n\n'
+        f'Respond with ONLY: {{"score": <float>, "reason": "<your analysis in one sentence>"}}'
     )
 
     try:
         response = ollama.generate(
             model='llama3.2',
             prompt=prompt,
-            options={'num_predict': 50, 'temperature': 0.1}
+            options={'num_predict': 80, 'temperature': 0.1}
         )
 
         text = response['response'].strip()

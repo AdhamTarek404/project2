@@ -148,39 +148,56 @@ def fallback_result():
         "predicted_next": "unknown"
     }
 
+_score_cache = {}
+
 def rule_based_score(command):
-    command = command.lower()
+    """Use LLM to dynamically score a single command's threat level (0.0-1.0).
+    Results are cached per unique command so the LLM is only called once."""
+    cmd_key = command.strip().lower()
+    if cmd_key in _score_cache:
+        return _score_cache[cmd_key]
 
-    INSTANT_HIGH = [
-        "wget", "curl -o", "chmod +x", "./",
-        "bash -i", "python -c", "perl -e",
-        "nc -e", "ncat", "/tmp/", "crontab"
-    ]
+    prompt = (
+        f'Rate the threat level of this SSH honeypot command as a float 0.0 to 1.0.\n'
+        f'0.0=harmless, 0.2=basic recon, 0.4=suspicious, 0.7=dangerous, 1.0=critical malware/ransomware.\n'
+        f'Command: {command}\n'
+        f'Respond with ONLY a JSON object: {{"score": 0.XX, "reason": "short reason"}}'
+    )
 
-    INSTANT_MEDIUM = [
-        "cat /etc/shadow", "cat /etc/passwd",
-        "find / -perm", "id", "whoami",
-        "uname", "ifconfig", "netstat",
-        "ps aux", "curl", "scp", "ftp"
-    ]
+    try:
+        response = ollama.generate(
+            model='llama3.2',
+            prompt=prompt,
+            options={'num_predict': 50, 'temperature': 0.1}
+        )
 
-    INSTANT_LOW = [
-        "ls", "pwd", "cd", "echo",
-        "hostname", "date", "who", "w"
-    ]
+        text = response['response'].strip()
+        text = re.sub(r'```json\s*', '', text)
+        text = re.sub(r'```\s*', '', text)
+        text = text.strip()
 
-    for pattern in INSTANT_HIGH:
-        if pattern in command:
-            return 0.75
+        start = text.find('{')
+        end = text.rfind('}')
+        if start != -1 and end != -1:
+            result = json.loads(text[start:end+1])
+            score = float(result.get('score', 0.15))
+            score = max(0.0, min(1.0, score))
+            _score_cache[cmd_key] = score
+            return score
 
-    for pattern in INSTANT_MEDIUM:
-        if pattern in command:
-            return 0.40
+        match = re.search(r'(\d+\.?\d*)', text)
+        if match:
+            score = float(match.group(1))
+            if score > 1:
+                score = score / 100
+            score = max(0.0, min(1.0, score))
+            _score_cache[cmd_key] = score
+            return score
 
-    for pattern in INSTANT_LOW:
-        if pattern in command:
-            return 0.10
+    except Exception as e:
+        print(f"LLM score error: {e}")
 
+    _score_cache[cmd_key] = 0.15
     return 0.15
 
 if __name__ == "__main__":

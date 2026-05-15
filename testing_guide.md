@@ -562,7 +562,7 @@ mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT session_id, command, m
 python3 malware_analyzer.py
 
 # Verify results in DB
-mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT file_hash, file_name, analysis_status, yara_matches FROM malware_analysis;"
+mysql -u neuraltrap -pneuraltrap123 neuraltrap -e "SELECT shasum, session_id, url, LEFT(analysis_report, 50) AS report_preview FROM malware_analysis;"
 ```
 - Open the **Streamlit Dashboard** and navigate to the **Malware Intelligence** tab to view the analysis reports.
 

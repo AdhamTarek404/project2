@@ -26,9 +26,9 @@ def write_lure(filepath, content):
     print(f"✅ Generated Honeytoken: {full_path}")
 
 def main():
+    global HONEYFS_DIR
     if not os.path.exists(HONEYFS_DIR):
         print(f"⚠️ Warning: {HONEYFS_DIR} does not exist. Files will be generated here locally instead.")
-        global HONEYFS_DIR
         HONEYFS_DIR = "./honeyfs"
     
     print("🐝 Initializing Dynamic AI Honeytoken Generation...")

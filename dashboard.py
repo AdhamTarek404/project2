@@ -17,16 +17,95 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+    /* ========================================= */
+    /* === EXTREME CYBERPUNK OVERHAUL CSS ====== */
+    /* ========================================= */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600&display=swap');
 
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    
     .main {
-        background-color: #0a0b10 !important;
+        background-color: #050608 !important;
         background-image: 
-            linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
-        background-size: 30px 30px;
+            radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 60%),
+            linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+        background-size: 100% 100%, 40px 40px, 40px 40px;
+        position: relative;
     }
+
+    /* CRT SCANLINE OVERLAY */
+    .main::before {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 999;
+        background-size: 100% 4px, 6px 100%;
+        pointer-events: none;
+        opacity: 0.4;
+    }
+    
+    @keyframes scanline {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100vh); }
+    }
+    .main::after {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: rgba(0, 229, 255, 0.03);
+        height: 10px;
+        z-index: 998;
+        pointer-events: none;
+        animation: scanline 8s linear infinite;
+        box-shadow: 0px 0px 15px 5px rgba(0,229,255,0.2);
+    }
+
+    /* NEON SCROLLBARS */
+    ::-webkit-scrollbar { width: 8px; height: 8px; background: #050608; }
+    ::-webkit-scrollbar-thumb { background: #00e5ff; box-shadow: 0 0 10px #00e5ff; border-radius: 0px; }
+    ::-webkit-scrollbar-corner { background: #050608; }
+
+    /* GLITCH TEXT EFFECT FOR TITLES */
+    @keyframes glitch {
+        0% { clip-path: inset(10% 0 30% 0); transform: translate(-2px, 1px); }
+        20% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -1px); }
+        40% { clip-path: inset(40% 0 20% 0); transform: translate(-2px, 2px); }
+        60% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -2px); }
+        80% { clip-path: inset(50% 0 30% 0); transform: translate(-1px, 1px); }
+        100% { clip-path: inset(30% 0 10% 0); transform: translate(1px, -1px); }
+    }
+
+    .glitch-text {
+        position: relative;
+        font-family: 'Orbitron', sans-serif !important;
+        color: #00e5ff !important;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        font-weight: 900;
+        text-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+    .glitch-text::before, .glitch-text::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: #050608;
+    }
+    .glitch-text::before {
+        left: 2px; text-shadow: -2px 0 #ff2a2a;
+        animation: glitch 3s infinite linear alternate-reverse;
+    }
+    .glitch-text::after {
+        left: -2px; text-shadow: -2px 0 #00ff66;
+        animation: glitch 2.5s infinite linear alternate-reverse;
+    }
+
+    /* STANDARD HEADERS */
     h1, h2, h3 {
         font-family: 'Orbitron', sans-serif !important;
         color: #00e5ff !important;
@@ -34,145 +113,170 @@ st.markdown("""
         letter-spacing: 2px;
         text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
     }
+
+    /* CYBER HUD METRIC CARDS WITH TARGETING BRACKETS */
+    .cyber-hud-card {
+        background: linear-gradient(135deg, rgba(16, 20, 30, 0.8) 0%, rgba(5, 6, 8, 0.9) 100%);
+        border: 1px solid rgba(0, 229, 255, 0.1);
+        padding: 20px 25px;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .cyber-hud-card::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 15px; height: 15px;
+        border-top: 2px solid var(--hud-color, #00e5ff);
+        border-left: 2px solid var(--hud-color, #00e5ff);
+        transition: all 0.3s;
+    }
+    .cyber-hud-card::after {
+        content: ''; position: absolute; bottom: 0; right: 0; width: 15px; height: 15px;
+        border-bottom: 2px solid var(--hud-color, #00e5ff);
+        border-right: 2px solid var(--hud-color, #00e5ff);
+        transition: all 0.3s;
+    }
+    .hud-corner-tr {
+        position: absolute; top: 0; right: 0; width: 15px; height: 15px;
+        border-top: 2px solid var(--hud-color, #00e5ff);
+        border-right: 2px solid var(--hud-color, #00e5ff);
+        transition: all 0.3s;
+    }
+    .hud-corner-bl {
+        position: absolute; bottom: 0; left: 0; width: 15px; height: 15px;
+        border-bottom: 2px solid var(--hud-color, #00e5ff);
+        border-left: 2px solid var(--hud-color, #00e5ff);
+        transition: all 0.3s;
+    }
+
+    .cyber-hud-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--hud-color, #00e5ff);
+        background: linear-gradient(135deg, rgba(16, 20, 30, 0.9) 0%, rgba(20, 30, 45, 0.95) 100%);
+    }
+    .cyber-hud-card:hover::before, .cyber-hud-card:hover::after,
+    .cyber-hud-card:hover .hud-corner-tr, .cyber-hud-card:hover .hud-corner-bl {
+        width: 30px; height: 30px;
+    }
+
+    .cyber-label {
+        font-family: 'Rajdhani', sans-serif;
+        color: #8c9eff;
+        font-size: 1rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+    .cyber-label::before {
+        content: '▶';
+        color: var(--hud-color, #00e5ff);
+        font-size: 0.7rem;
+        margin-right: 8px;
+        animation: blink 1s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .cyber-value {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: var(--text-color, #00ff66);
+        text-shadow: 0 0 15px var(--text-color, #00ff66);
+    }
+
+    /* EXTREME SIDEBAR NAVIGATION */
     section[data-testid="stSidebar"] {
-        background-color: #11131a !important;
-        border-right: 1px solid rgba(177, 66, 255, 0.2);
+        background-color: #08090c !important;
+        border-right: 1px solid rgba(0, 229, 255, 0.3);
+        box-shadow: 5px 0 20px rgba(0, 0, 0, 0.8);
     }
-    [data-testid="stMetricValue"] {
-        font-family: 'Rajdhani', sans-serif !important;
-        font-size: 2.5rem !important;
-        font-weight: bold;
-        color: #00ff66 !important;
-        text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
-    }
-    [data-testid="stMetricLabel"] {
-        font-family: 'Orbitron', sans-serif !important;
-        color: #8c9eff !important;
-        letter-spacing: 1px;
-    }
-    div[data-testid="metric-container"] {
-        background: rgba(16, 20, 30, 0.6);
+    div[role="radiogroup"] > label > div:first-child { display: none !important; }
+    div[role="radiogroup"] > label {
+        background: linear-gradient(90deg, rgba(0,229,255,0.05) 0%, transparent 100%);
         border: 1px solid rgba(0, 229, 255, 0.2);
+        border-left: 3px solid transparent;
         padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 229, 255, 0.05);
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
+        margin-bottom: 10px;
+        transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        width: 100%;
+        cursor: pointer;
+        clip-path: polygon(15px 0, 100% 0, 100% 100%, 0 100%, 0 15px);
     }
-    div[data-testid="metric-container"]:hover {
-        border-color: rgba(0, 229, 255, 0.6);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 229, 255, 0.2);
+    div[role="radiogroup"] > label:hover {
+        background: linear-gradient(90deg, rgba(0,229,255,0.15) 0%, transparent 100%);
+        border-left: 3px solid #00e5ff;
+        transform: translateX(5px);
     }
-    .stDataFrame {
-        border: 1px solid rgba(177, 66, 255, 0.3);
-        border-radius: 5px;
+    div[role="radiogroup"] > label[data-checked="true"], 
+    div[role="radiogroup"] > label[aria-checked="true"] {
+        background: linear-gradient(90deg, rgba(0,229,255,0.25) 0%, rgba(0,229,255,0.05) 100%);
+        border: 1px solid #00e5ff;
+        border-left: 5px solid #00e5ff;
+        box-shadow: inset 10px 0 20px rgba(0, 229, 255, 0.2), 0 0 15px rgba(0, 229, 255, 0.3);
+        transform: translateX(10px);
     }
+    div[role="radiogroup"] > label p {
+        font-family: 'Rajdhani', sans-serif !important;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: #fff !important;
+        text-transform: uppercase;
+        margin: 0;
+        font-size: 1.1rem;
+        text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+
+    /* HACKER TERMINAL FEED */
+    .terminal-feed {
+        font-family: 'Courier New', Courier, monospace;
+        color: #00ff66;
+        background-color: #020202;
+        border: 1px solid #00ff66;
+        border-left: 5px solid #00ff66;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.05), 0 0 10px rgba(0, 255, 102, 0.1);
+        position: relative;
+    }
+    .terminal-feed::before {
+        content: '>>_';
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        opacity: 0.5;
+        animation: blink 1s infinite;
+    }
+    .terminal-feed.danger {
+        color: #ff2a2a;
+        border-color: #ff2a2a;
+        border-left-color: #ff2a2a;
+        background-color: rgba(255, 42, 42, 0.05);
+        box-shadow: inset 0 0 10px rgba(255, 42, 42, 0.1), 0 0 15px rgba(255, 42, 42, 0.2);
+    }
+    
+    .stDataFrame { border: 1px solid rgba(177, 66, 255, 0.4); border-radius: 2px; }
+    hr { border-color: rgba(0, 229, 255, 0.1) !important; box-shadow: 0 0 10px rgba(0,229,255,0.2); }
     .streamlit-expanderHeader {
         font-family: 'Rajdhani', sans-serif;
         color: #00e5ff !important;
         background-color: rgba(177, 66, 255, 0.1) !important;
-        border-radius: 5px;
+        border-radius: 2px;
         border: 1px solid rgba(177, 66, 255, 0.3) !important;
-    }
-    .terminal-feed {
-        font-family: 'Courier New', monospace;
-        color: #00ff66;
-        background-color: #050505;
-        border-left: 3px solid #00ff66;
-        padding: 10px;
-        margin-bottom: 5px;
-        border-radius: 0 5px 5px 0;
-        box-shadow: 0 0 10px rgba(0, 255, 102, 0.1);
-    }
-    .terminal-feed.danger {
-        color: #ff2a2a;
-        border-left-color: #ff2a2a;
-        background-color: rgba(255, 42, 42, 0.05);
-        box-shadow: 0 0 10px rgba(255, 42, 42, 0.1);
-    }
-    hr {
-        border-color: rgba(0, 229, 255, 0.2) !important;
-    }
-
-    /* === NEW STRUCTURAL HUD CSS === */
-    .cyber-hud-card {
-        background: rgba(16, 20, 30, 0.6);
-        border: 1px solid rgba(0, 229, 255, 0.2);
-        padding: 15px 20px;
-        margin-bottom: 1rem;
-        backdrop-filter: blur(10px);
-        clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    .cyber-hud-card::after {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.05);
-        pointer-events: none;
-    }
-    .cyber-hud-card:hover {
-        border-color: rgba(0, 229, 255, 0.6);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 229, 255, 0.2);
-    }
-    .cyber-label {
-        font-family: 'Orbitron', sans-serif;
-        color: #8c9eff;
-        font-size: 0.8rem;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 5px;
-    }
-    .cyber-value {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 2.5rem;
-        font-weight: bold;
-        text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
-    }
-
-    /* SCI-FI RADIO BUTTONS */
-    div[role="radiogroup"] > label > div:first-child {
-        display: none !important;
-    }
-    div[role="radiogroup"] > label {
-        background: rgba(0, 229, 255, 0.03);
-        border: 1px solid rgba(0, 229, 255, 0.1);
-        border-radius: 4px;
-        padding: 12px 15px;
-        margin-bottom: 8px;
-        transition: all 0.3s;
-        width: 100%;
-        cursor: pointer;
-        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-    }
-    div[role="radiogroup"] > label:hover {
-        background: rgba(0, 229, 255, 0.1);
-        border-color: #00e5ff;
-    }
-    div[role="radiogroup"] > label[data-checked="true"], 
-    div[role="radiogroup"] > label[aria-checked="true"] {
-        background: rgba(0, 229, 255, 0.15);
-        border-left: 4px solid #00e5ff;
-        border-right: 1px solid #00e5ff;
-        border-top: 1px solid #00e5ff;
-        border-bottom: 1px solid #00e5ff;
-        box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.2);
-    }
-    div[role="radiogroup"] > label p {
-        font-family: 'Orbitron', sans-serif !important;
-        color: #00e5ff !important;
-        margin: 0;
-        font-size: 1.0rem;
     }
 </style>
 """, unsafe_allow_html=True)
 
 def cyber_metric(label, value, accent_color="#00e5ff", text_color="#00ff66"):
     return f"""
-    <div class="cyber-hud-card" style="border-left: 4px solid {accent_color};">
+    <div class="cyber-hud-card" style="--hud-color: {accent_color}; --text-color: {text_color};">
+        <div class="hud-corner-tr"></div>
+        <div class="hud-corner-bl"></div>
         <div class="cyber-label">{label}</div>
-        <div class="cyber-value" style="color: {text_color};">{value}</div>
+        <div class="cyber-value">{value}</div>
     </div>
     """
 
@@ -217,7 +321,7 @@ if auto_refresh:
 # OVERVIEW PAGE
 # ============================================================
 if page == "🏠 Overview":
-    st.title("🛡️ NeuralTrap — Command Center")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'🛡️ NeuralTrap — Command Center\'>🛡️ NeuralTrap — Command Center</h1>", unsafe_allow_html=True)
     st.markdown("**Real-time AI-Powered Network Deception System**")
     st.markdown("---")
 
@@ -298,7 +402,7 @@ if page == "🏠 Overview":
 # LIVE ATTACKS PAGE
 # ============================================================
 elif page == "⚔️ Live Attacks":
-    st.title("⚔️ Live Attack Feed")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'⚔️ Live Attack Feed\'>⚔️ Live Attack Feed</h1>", unsafe_allow_html=True)
     st.markdown("Real-time commands being executed in the honeypot")
     st.markdown("---")
 
@@ -334,7 +438,7 @@ elif page == "⚔️ Live Attacks":
 # COWRIE INTEL — auth, files, client, dwell, TTY paths
 # ============================================================
 elif page == "🔬 Cowrie Intel":
-    st.title("🔬 Cowrie Session Intelligence")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'🔬 Cowrie Session Intelligence\'>🔬 Cowrie Session Intelligence</h1>", unsafe_allow_html=True)
     st.markdown(
         "Login attempts, uploads/downloads, SSH client / HASSH, dwell time, and TTY recording paths "
         "parsed from Cowrie JSON (fed by **neuraltrap.py**)."
@@ -446,7 +550,7 @@ elif page == "🔬 Cowrie Intel":
 # AI PREDICTIONS PAGE
 # ============================================================
 elif page == "🧠 AI Predictions":
-    st.title("🧠 AI Threat Predictions")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'🧠 AI Threat Predictions\'>🧠 AI Threat Predictions</h1>", unsafe_allow_html=True)
     st.markdown("LSTM model predictions for each attack session")
     st.markdown("---")
 
@@ -482,7 +586,7 @@ elif page == "🧠 AI Predictions":
 # FORENSIC REPORTS PAGE
 # ============================================================
 elif page == "📋 Forensic Reports":
-    st.title("📋 AI Forensic Reports")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'📋 AI Forensic Reports\'>📋 AI Forensic Reports</h1>", unsafe_allow_html=True)
     st.markdown("LLM-generated incident reports in plain English")
     st.markdown("---")
 
@@ -526,7 +630,7 @@ elif page == "📋 Forensic Reports":
 # BLOCKED IPS PAGE
 # ============================================================
 elif page == "🚫 Blocked IPs":
-    st.title("🚫 Blocked IP Addresses")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'🚫 Blocked IP Addresses\'>🚫 Blocked IP Addresses</h1>", unsafe_allow_html=True)
     st.markdown("IPs automatically blocked by NeuralTrap")
     st.markdown("---")
 
@@ -540,6 +644,7 @@ elif page == "🚫 Blocked IPs":
         df = pd.DataFrame(data, columns=["IP Address", "Attack Type", "Threat Score", "Blocked At", "Reason"])
         df["Threat Score"] = df["Threat Score"].apply(lambda x: f"{x:.0%}")
 
+        col1, col2 = st.columns(2)
         with col1:
             st.markdown(cyber_metric("Total Blocked IPs", len(df), "#bd00ff"), unsafe_allow_html=True)
         with col2:
@@ -568,7 +673,7 @@ elif page == "🚫 Blocked IPs":
 # ATTACKER PROFILES PAGE
 # ============================================================
 elif page == "👤 Attacker Profiles":
-    st.title("👤 Attacker Profiles")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'👤 Attacker Profiles\'>👤 Attacker Profiles</h1>", unsafe_allow_html=True)
     st.markdown("Known attacker profiles based on behavior patterns")
     st.markdown("---")
 
@@ -613,7 +718,7 @@ elif page == "👤 Attacker Profiles":
 # WORLD MAP PAGE
 # ============================================================
 elif page == "🌍 Attack World Map":
-    st.title("🌍 Global Attack Map")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'🌍 Global Attack Map\'>🌍 Global Attack Map</h1>", unsafe_allow_html=True)
     st.markdown("Geographic origin of attacks hitting NeuralTrap")
     st.markdown("---")
 
@@ -739,7 +844,7 @@ elif page == "🌍 Attack World Map":
 # LIVE THREAT MONITOR PAGE
 # ============================================================
 elif page == "📈 Live Threat Monitor":
-    st.title("📈 Live Threat Score Monitor")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'📈 Live Threat Score Monitor\'>📈 Live Threat Score Monitor</h1>", unsafe_allow_html=True)
     st.markdown("Real-time threat scores updating as attackers type commands")
     st.markdown("---")
 
@@ -909,7 +1014,7 @@ elif page == "📈 Live Threat Monitor":
 # MALWARE INTELLIGENCE PAGE
 # ============================================================
 elif page == "🦠 Malware Intelligence":
-    st.title("🦠 Malware Intelligence")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'🦠 Malware Intelligence\'>🦠 Malware Intelligence</h1>", unsafe_allow_html=True)
     st.markdown("Automated AI-driven reverse engineering of downloaded payloads.")
     st.markdown("---")
 
@@ -949,7 +1054,7 @@ elif page == "🦠 Malware Intelligence":
 # HONEYTOKEN ACTIVITY PAGE
 # ============================================================
 elif page == "🍯 Honeytoken Activity":
-    st.title("🍯 Honeytoken Activity")
+    st.markdown("<h1 class=\'glitch-text\' data-text=\'🍯 Honeytoken Activity\'>🍯 Honeytoken Activity</h1>", unsafe_allow_html=True)
     st.markdown("Alerts triggered when attackers interact with AI-generated fake lures.")
     st.markdown("---")
 

@@ -186,11 +186,17 @@ def rule_based_score(command):
         start = text.find('{')
         end = text.rfind('}')
         if start != -1 and end != -1:
-            result = json.loads(text[start:end+1])
-            score = float(result.get('score', 0.15))
-            score = max(0.0, min(1.0, score))
-            _score_cache[cmd_key] = score
-            return score
+            json_str = text[start:end+1]
+            json_str = re.sub(r',\s*}', '}', json_str)
+            json_str = re.sub(r'<[^>]+>', '""', json_str)
+            try:
+                result = json.loads(json_str)
+                score = float(result.get('score', 0.15))
+                score = max(0.0, min(1.0, score))
+                _score_cache[cmd_key] = score
+                return score
+            except (json.JSONDecodeError, ValueError):
+                pass
 
         match = re.search(r'(\d+\.?\d*)', text)
         if match:

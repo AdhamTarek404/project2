@@ -755,7 +755,34 @@ elif page == "🌍 Attack World Map":
     st.markdown("Geographic origin of attacks hitting NeuralTrap")
     st.markdown("---")
 
-    data = run_query("""
+    # --- Simulated geo-locations for localhost/test sessions ---
+    _SIM_ORIGINS = [
+        {"ip": "185.220.101.34",  "lat": 55.7558,  "lon": 37.6173,   "country": "Russia",        "city": "Moscow"},
+        {"ip": "103.145.13.22",   "lat": 39.9042,  "lon": 116.4074,  "country": "China",         "city": "Beijing"},
+        {"ip": "45.227.254.8",    "lat": -23.5505, "lon": -46.6333,  "country": "Brazil",        "city": "São Paulo"},
+        {"ip": "91.132.147.12",   "lat": 50.4501,  "lon": 30.5234,   "country": "Ukraine",       "city": "Kyiv"},
+        {"ip": "14.161.26.100",   "lat": 10.8231,  "lon": 106.6297,  "country": "Vietnam",       "city": "Ho Chi Minh City"},
+        {"ip": "175.45.176.3",    "lat": 39.0392,  "lon": 125.7625,  "country": "North Korea",   "city": "Pyongyang"},
+        {"ip": "89.248.167.131",  "lat": 52.3676,  "lon": 4.9041,    "country": "Netherlands",   "city": "Amsterdam"},
+        {"ip": "5.188.210.56",    "lat": 59.9343,  "lon": 30.3351,   "country": "Russia",        "city": "St. Petersburg"},
+        {"ip": "41.231.53.12",    "lat": 36.8065,  "lon": 10.1815,   "country": "Tunisia",       "city": "Tunis"},
+        {"ip": "118.193.40.42",   "lat": 22.3193,  "lon": 114.1694,  "country": "Hong Kong",     "city": "Hong Kong"},
+        {"ip": "185.156.73.54",   "lat": 51.5074,  "lon": -0.1278,   "country": "United Kingdom","city": "London"},
+        {"ip": "193.106.191.30",  "lat": 32.0853,  "lon": 34.7818,   "country": "Israel",        "city": "Tel Aviv"},
+        {"ip": "112.85.42.88",    "lat": 31.2304,  "lon": 121.4737,  "country": "China",         "city": "Shanghai"},
+        {"ip": "200.25.32.7",     "lat": 4.7110,   "lon": -74.0721,  "country": "Colombia",      "city": "Bogotá"},
+        {"ip": "156.146.56.12",   "lat": 28.6139,  "lon": 77.2090,   "country": "India",         "city": "New Delhi"},
+    ]
+
+    # Fetch ALL sessions (including localhost) for simulation
+    data_all = run_query("""
+        SELECT DISTINCT src_ip, attack_type, COUNT(*) as count
+        FROM labeled_sessions
+        GROUP BY src_ip, attack_type
+    """)
+
+    # Also try external-only for real GeoIP
+    data_external = run_query("""
         SELECT DISTINCT src_ip, attack_type, COUNT(*) as count
         FROM labeled_sessions
         WHERE src_ip != '127.0.0.1'
@@ -763,53 +790,91 @@ elif page == "🌍 Attack World Map":
         GROUP BY src_ip, attack_type
     """)
 
-    if not data:
-        st.info("No external IPs recorded yet.")
-    else:
-        geoip_path = "geoip/GeoLite2-City.mmdb"
-        if not os.path.exists(geoip_path):
-            geoip_path = os.path.expanduser("~/cowrie/geoip/GeoLite2-City.mmdb")
+    has_real_external = bool(data_external)
+    has_any_sessions = bool(data_all)
 
+    if not has_any_sessions:
+        st.info("No attack sessions recorded yet.")
+    else:
         locations = []
         country_counts = {}
 
-        try:
-            reader = geoip2.database.Reader(geoip_path)
+        # --- Try real GeoIP for external IPs first ---
+        if has_real_external:
+            geoip_path = "geoip/GeoLite2-City.mmdb"
+            if not os.path.exists(geoip_path):
+                geoip_path = os.path.expanduser("~/cowrie/geoip/GeoLite2-City.mmdb")
+            try:
+                reader = geoip2.database.Reader(geoip_path)
+                for row in data_external:
+                    src_ip, attack_type, count = row
+                    try:
+                        response = reader.city(src_ip)
+                        lat = response.location.latitude
+                        lon = response.location.longitude
+                        country = response.country.name
+                        city = response.city.name or "Unknown"
+                        if lat and lon:
+                            locations.append({
+                                "ip": src_ip, "lat": lat, "lon": lon,
+                                "country": country, "city": city,
+                                "attack_type": attack_type, "count": count
+                            })
+                            country_counts[country] = country_counts.get(country, 0) + count
+                    except:
+                        continue
+                reader.close()
+            except Exception:
+                pass
 
-            for row in data:
-                src_ip, attack_type, count = row
-                try:
-                    response = reader.city(src_ip)
-                    lat = response.location.latitude
-                    lon = response.location.longitude
-                    country = response.country.name
-                    city = response.city.name or "Unknown"
+        # --- Simulate geo for localhost / private IPs ---
+        import hashlib
+        local_sessions = run_query("""
+            SELECT session_id, src_ip, attack_type, threat_score
+            FROM labeled_sessions
+            WHERE src_ip = '127.0.0.1' OR src_ip = '0.0.0.0'
+               OR src_ip LIKE '10.%%' OR src_ip LIKE '192.168.%%'
+            ORDER BY id ASC
+        """)
 
-                    if lat and lon:
-                        locations.append({
-                            "ip": src_ip,
-                            "lat": lat,
-                            "lon": lon,
-                            "country": country,
-                            "city": city,
-                            "attack_type": attack_type,
-                            "count": count
-                        })
+        if local_sessions:
+            sim_mode = True
+            for row in local_sessions:
+                session_id, src_ip, attack_type, threat_score = row
+                # Deterministic: same session always maps to same location
+                idx = int(hashlib.md5(session_id.encode()).hexdigest(), 16) % len(_SIM_ORIGINS)
+                origin = _SIM_ORIGINS[idx]
+                # Add slight random offset so dots don't stack perfectly
+                offset_lat = (int(hashlib.sha1(session_id.encode()).hexdigest()[:4], 16) % 200 - 100) / 100.0
+                offset_lon = (int(hashlib.sha1(session_id.encode()).hexdigest()[4:8], 16) % 200 - 100) / 100.0
+                locations.append({
+                    "ip": origin["ip"],
+                    "lat": origin["lat"] + offset_lat,
+                    "lon": origin["lon"] + offset_lon,
+                    "country": origin["country"],
+                    "city": origin["city"],
+                    "attack_type": attack_type,
+                    "count": 1
+                })
+                country_counts[origin["country"]] = country_counts.get(origin["country"], 0) + 1
+        else:
+            sim_mode = False
 
-                        if country not in country_counts:
-                            country_counts[country] = 0
-                        country_counts[country] += count
-
-                except:
-                    continue
-
-            reader.close()
-
-        except Exception as e:
-            st.error(f"GeoIP error: {e}")
-            locations = []
+        if sim_mode and not has_real_external:
+            st.markdown("""
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+                <div style="width:12px;height:12px;border-radius:50%;background:#bd00ff;
+                            animation:pulse_dot 1.5s infinite;box-shadow:0 0 8px #bd00ff;"></div>
+                <span style="font-family:'Rajdhani',sans-serif;color:#bd00ff;font-weight:700;
+                             letter-spacing:2px;text-transform:uppercase;font-size:0.85rem;">
+                    GEO-SIMULATION — Localhost sessions mapped to realistic global origins
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
 
         if locations:
+            col1, col2 = st.columns(2)
+
             df_map = pd.DataFrame(locations)
 
             fig = px.scatter_geo(

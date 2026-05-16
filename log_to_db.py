@@ -38,7 +38,7 @@ class LogHandler(FileSystemEventHandler):
                 line = line.strip()
                 if line:
                     self.processed_lines.add(line)
-        print(f"log_to_db: skipped {len(self.processed_lines)} existing JSON lines")
+
 
     def on_modified(self, event):
         if "cowrie.json" not in event.src_path:

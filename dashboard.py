@@ -541,11 +541,24 @@ elif page == "🔬 Cowrie Intel":
     )
 
 # ============================================================
-# AI PREDICTIONS PAGE
+# AI PREDICTIONS PAGE  (LIVE)
 # ============================================================
 elif page == "🧠 AI Predictions":
-    st.markdown("<h1 class=\'glitch-text\' data-text=\'🧠 AI Threat Predictions\'>🧠 AI Threat Predictions</h1>", unsafe_allow_html=True)
-    st.markdown("LSTM model predictions for each attack session")
+    st.markdown("<h1 class='glitch-text' data-text='🧠 AI Threat Predictions'>🧠 AI Threat Predictions</h1>", unsafe_allow_html=True)
+    st.markdown("AI-powered predictions for each attack session — **live updating**")
+
+    # Live pulse indicator
+    st.markdown("""
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#00ff66;
+                    animation:pulse_dot 1.5s infinite;box-shadow:0 0 8px #00ff66;"></div>
+        <span style="font-family:'Rajdhani',sans-serif;color:#00ff66;font-weight:700;
+                     letter-spacing:2px;text-transform:uppercase;font-size:0.95rem;">
+            LIVE FEED — Auto-Refreshing
+        </span>
+    </div>
+    <style>@keyframes pulse_dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}</style>
+    """, unsafe_allow_html=True)
     st.markdown("---")
 
     data = run_query("""
@@ -559,11 +572,20 @@ elif page == "🧠 AI Predictions":
         for i, row in enumerate(data):
             session_id, src_ip, attack_type, threat_score, commands = row
 
+            # Fetch latest predicted_next from realtime_scores
+            pred_rows = run_query("""
+                SELECT predicted_next FROM realtime_scores
+                WHERE session_id = %s
+                ORDER BY command_number DESC
+                LIMIT 1
+            """, (session_id,))
+            predicted_next = pred_rows[0][0] if pred_rows and pred_rows[0][0] else None
+
             col1, col2, col3 = st.columns([2, 2, 4])
 
             with col1:
                 st.write(f"**{src_ip}**")
-                st.write(f"Session: {session_id[:8]}...")
+                st.write(f"Session: `{session_id[:8]}…`")
 
             with col2:
                 color = "🔴" if threat_score >= 0.85 else "🟡" if threat_score >= 0.5 else "🟢"
@@ -572,9 +594,26 @@ elif page == "🧠 AI Predictions":
                 st.write(f"Threat Score: {threat_score:.0%}")
 
             with col3:
-                st.write(f"Commands: {commands[:100]}...")
+                st.write(f"**Commands:** {commands[:120]}…")
+                if predicted_next and predicted_next.lower() != "unknown":
+                    st.markdown(f"""
+                    <div style="margin-top:8px;padding:8px 14px;border-left:4px solid #bd00ff;
+                                background:rgba(189,0,255,0.08);border-radius:0 4px 4px 0;">
+                        <span style="color:#bd00ff;font-weight:700;font-family:'Rajdhani',sans-serif;
+                                     letter-spacing:1px;font-size:0.85rem;">🔮 PREDICTED NEXT COMMAND</span><br/>
+                        <code style="color:#00ff66;font-size:0.95rem;">{predicted_next}</code>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.caption("🔮 Next command: awaiting more data…")
 
             st.markdown("---")
+    else:
+        st.info("No AI prediction data yet. Run an attack simulation to populate this page.")
+
+    # Auto-refresh every 5 seconds for live feel
+    time.sleep(5)
+    st.rerun()
 
 # ============================================================
 # FORENSIC REPORTS PAGE

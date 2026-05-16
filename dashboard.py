@@ -8,6 +8,7 @@ import time
 import geoip2.database
 import os
 
+
 st.set_page_config(
     page_title="NeuralTrap Dashboard",
     page_icon="🛡️",
@@ -417,14 +418,17 @@ elif page == "⚔️ Live Attacks":
             cmd = row["Command"].lower()
             is_dangerous = any(d in cmd for d in dangerous)
 
+            import html
+            safe_command = html.escape(row["Command"])
+
             col1, col2 = st.columns([2, 6])
             with col1:
                 st.write(f"🌐 `{row['IP Address']}`\n\n*(Session: {row['Session ID'][:8]})*")
             with col2:
                 if is_dangerous:
-                    st.markdown(f"<div class='terminal-feed danger'>[ROOT@HONEYPOT:~]# {row['Command']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='terminal-feed danger'>[ROOT@HONEYPOT:~]# {safe_command}</div>", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"<div class='terminal-feed'>[USER@HONEYPOT:~]$ {row['Command']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='terminal-feed'>[USER@HONEYPOT:~]$ {safe_command}</div>", unsafe_allow_html=True)
     else:
         st.info("No attack data yet.")
 

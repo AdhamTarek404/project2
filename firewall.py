@@ -1,6 +1,6 @@
 import subprocess
 import mysql.connector
-from datetime import datetim
+from datetime import datetime
 
 # Database connection
 db = mysql.connector.connect(

@@ -1,6 +1,6 @@
 import ollama
 import json
-import re
+import r
 
 SYSTEM_PROMPT = """You are a cybersecurity AI expert analyzing SSH honeypot attack sessions.
 

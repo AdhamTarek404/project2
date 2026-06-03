@@ -1,7 +1,7 @@
 """
 Shared MySQL DDL for NeuralTrap + Cowrie enrichment.
 Used by neuraltrap.py on startup and by init_db.py for one-shot setup.
-"""
+"""s
 
 
 def ensure_schema(cursor, db):

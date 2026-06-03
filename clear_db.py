@@ -1,4 +1,4 @@
-import mysql.connector
+import mysql.connecto
 
 def clear_database():
     try:

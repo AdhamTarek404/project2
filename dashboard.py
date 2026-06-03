@@ -19,257 +19,174 @@ st.set_page_config(
 st.markdown("""
 <style>
     /* ========================================= */
-    /* === EXTREME CYBERPUNK OVERHAUL CSS ====== */
+    /* === MODERN PREMIUM ENTERPRISE CSS ======= */
     /* ========================================= */
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
     .main {
-        background-color: #050608 !important;
+        background-color: #0F172A !important;
         background-image: 
-            radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 60%),
-            linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
-        background-size: 100% 100%, 40px 40px, 40px 40px;
-        position: relative;
+            radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.04), transparent 50%),
+            radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.04), transparent 50%);
     }
 
-    /* CRT SCANLINE OVERLAY */
-    .main::before {
-        content: " ";
-        display: block;
-        position: absolute;
-        top: 0; left: 0; bottom: 0; right: 0;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        z-index: 999;
-        background-size: 100% 4px, 6px 100%;
-        pointer-events: none;
-        opacity: 0.4;
+    /* CUSTOM SCROLLBARS */
+    ::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* HEADERS */
+    .glitch-text, h1, h2, h3 {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        color: #F8FAFC !important;
+        font-weight: 700;
+        letter-spacing: -0.5px;
     }
     
-    @keyframes scanline {
-        0% { transform: translateY(-100%); }
-        100% { transform: translateY(100vh); }
-    }
-    .main::after {
-        content: " ";
-        display: block;
-        position: absolute;
-        top: 0; left: 0; bottom: 0; right: 0;
-        background: rgba(0, 229, 255, 0.03);
-        height: 10px;
-        z-index: 998;
-        pointer-events: none;
-        animation: scanline 8s linear infinite;
-        box-shadow: 0px 0px 15px 5px rgba(0,229,255,0.2);
-    }
-
-    /* NEON SCROLLBARS */
-    ::-webkit-scrollbar { width: 8px; height: 8px; background: #050608; }
-    ::-webkit-scrollbar-thumb { background: #00e5ff; box-shadow: 0 0 10px #00e5ff; border-radius: 0px; }
-    ::-webkit-scrollbar-corner { background: #050608; }
-
-    /* STATIC NEON TEXT FOR TITLES (Glitch Removed) */
     .glitch-text {
-        font-family: 'Orbitron', sans-serif !important;
-        color: #00e5ff !important;
-        text-transform: uppercase;
-        letter-spacing: 4px;
-        font-weight: 900;
-        text-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+        font-size: 2.2rem;
+        margin-bottom: 24px;
+        background: linear-gradient(90deg, #38BDF8, #A855F7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         display: inline-block;
-        margin-bottom: 20px;
     }
 
-    /* STANDARD HEADERS */
-    h1, h2, h3 {
-        font-family: 'Orbitron', sans-serif !important;
-        color: #00e5ff !important;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
-    }
-
-    /* CYBER HUD METRIC CARDS WITH TARGETING BRACKETS */
+    /* GLASSMORPHISM METRIC CARDS */
     .cyber-hud-card {
-        background: linear-gradient(135deg, rgba(16, 20, 30, 0.8) 0%, rgba(5, 6, 8, 0.9) 100%);
-        border: 1px solid rgba(0, 229, 255, 0.1);
-        padding: 20px 25px;
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 24px;
         margin-bottom: 1.5rem;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
-    .cyber-hud-card::before {
-        content: ''; position: absolute; top: 0; left: 0; width: 15px; height: 15px;
-        border-top: 2px solid var(--hud-color, #00e5ff);
-        border-left: 2px solid var(--hud-color, #00e5ff);
-        transition: all 0.3s;
-    }
-    .cyber-hud-card::after {
-        content: ''; position: absolute; bottom: 0; right: 0; width: 15px; height: 15px;
-        border-bottom: 2px solid var(--hud-color, #00e5ff);
-        border-right: 2px solid var(--hud-color, #00e5ff);
-        transition: all 0.3s;
-    }
-    .hud-corner-tr {
-        position: absolute; top: 0; right: 0; width: 15px; height: 15px;
-        border-top: 2px solid var(--hud-color, #00e5ff);
-        border-right: 2px solid var(--hud-color, #00e5ff);
-        transition: all 0.3s;
-    }
-    .hud-corner-bl {
-        position: absolute; bottom: 0; left: 0; width: 15px; height: 15px;
-        border-bottom: 2px solid var(--hud-color, #00e5ff);
-        border-left: 2px solid var(--hud-color, #00e5ff);
-        transition: all 0.3s;
-    }
-
     .cyber-hud-card:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--hud-color, #00e5ff);
-        background: linear-gradient(135deg, rgba(16, 20, 30, 0.9) 0%, rgba(20, 30, 45, 0.95) 100%);
-    }
-    .cyber-hud-card:hover::before, .cyber-hud-card:hover::after,
-    .cyber-hud-card:hover .hud-corner-tr, .cyber-hud-card:hover .hud-corner-bl {
-        width: 30px; height: 30px;
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(30, 41, 59, 0.85);
     }
 
     .cyber-label {
-        font-family: 'Rajdhani', sans-serif;
-        color: #8c9eff;
-        font-size: 1rem;
-        letter-spacing: 2px;
+        font-family: 'Inter', sans-serif;
+        color: #94A3B8;
+        font-size: 0.95rem;
+        font-weight: 500;
         text-transform: uppercase;
-        margin-bottom: 10px;
-        font-weight: 600;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
         display: flex;
         align-items: center;
     }
+    
     .cyber-label::before {
-        content: '▶';
-        color: var(--hud-color, #00e5ff);
-        font-size: 0.7rem;
-        margin-right: 8px;
-        animation: blink 1s infinite;
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--hud-color, #38BDF8);
+        margin-right: 10px;
+        box-shadow: 0 0 8px var(--hud-color, #38BDF8);
     }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
     .cyber-value {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 2.8rem;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 2.5rem;
         font-weight: 700;
-        color: var(--text-color, #00ff66);
-        text-shadow: 0 0 15px var(--text-color, #00ff66);
+        color: var(--text-color, #F8FAFC);
+        line-height: 1.2;
     }
 
-    /* EXTREME SIDEBAR NAVIGATION */
+    /* PREMIUM SIDEBAR NAVIGATION */
     section[data-testid="stSidebar"] {
-        background-color: #08090c !important;
-        border-right: 1px solid rgba(0, 229, 255, 0.3);
-        box-shadow: 5px 0 20px rgba(0, 0, 0, 0.8);
+        background-color: #0B1120 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
     div[role="radiogroup"] > label > div:first-child { display: none !important; }
     div[role="radiogroup"] > label {
-        background: linear-gradient(90deg, rgba(0,229,255,0.05) 0%, transparent 100%);
-        border: 1px solid rgba(0, 229, 255, 0.2);
-        border-left: 3px solid transparent;
-        padding: 15px 20px;
-        margin-bottom: 10px;
-        transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        transition: all 0.2s ease;
         width: 100%;
         cursor: pointer;
-        clip-path: polygon(15px 0, 100% 0, 100% 100%, 0 100%, 0 15px);
     }
     div[role="radiogroup"] > label:hover {
-        background: linear-gradient(90deg, rgba(0,229,255,0.15) 0%, transparent 100%);
-        border-left: 3px solid #00e5ff;
-        transform: translateX(5px);
+        background: rgba(255, 255, 255, 0.03);
     }
     div[role="radiogroup"] > label[data-checked="true"], 
     div[role="radiogroup"] > label[aria-checked="true"] {
-        background: linear-gradient(90deg, rgba(0,229,255,0.25) 0%, rgba(0,229,255,0.05) 100%);
-        border: 1px solid #00e5ff;
-        border-left: 5px solid #00e5ff;
-        box-shadow: inset 10px 0 20px rgba(0, 229, 255, 0.2), 0 0 15px rgba(0, 229, 255, 0.3);
-        transform: translateX(10px);
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.2);
     }
     div[role="radiogroup"] > label p {
-        font-family: 'Rajdhani', sans-serif !important;
-        font-weight: 700;
-        letter-spacing: 2px;
-        color: #fff !important;
-        text-transform: uppercase;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500;
+        color: #94A3B8 !important;
         margin: 0;
-        font-size: 1.1rem;
-        text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        font-size: 1rem;
+    }
+    div[role="radiogroup"] > label[data-checked="true"] p, 
+    div[role="radiogroup"] > label[aria-checked="true"] p {
+        color: #38BDF8 !important;
+        font-weight: 600;
     }
 
-    /* MAKE SIDEBAR TOGGLE BUTTON VISIBLE */
-    button[kind="header"] {
-        color: #00e5ff !important;
-        background-color: rgba(0, 229, 255, 0.1) !important;
-        border-radius: 5px;
-        border: 1px solid rgba(0, 229, 255, 0.3) !important;
+    /* SIDEBAR TOGGLE BUTTON */
+    button[kind="header"], [data-testid="collapsedControl"] {
+        color: #94A3B8 !important;
+        background-color: transparent !important;
     }
-    button[kind="header"]:hover {
-        box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
-    }
-    [data-testid="collapsedControl"] {
-        color: #00e5ff !important;
-        background-color: rgba(0, 229, 255, 0.1) !important;
-        border-radius: 5px;
-        border: 1px solid rgba(0, 229, 255, 0.3) !important;
-        z-index: 99999;
+    button[kind="header"]:hover, [data-testid="collapsedControl"]:hover {
+        color: #F8FAFC !important;
     }
 
-    /* HACKER TERMINAL FEED */
+    /* MODERN TERMINAL FEED */
     .terminal-feed {
-        font-family: 'Courier New', Courier, monospace;
-        color: #00ff66;
-        background-color: #020202;
-        border: 1px solid #00ff66;
-        border-left: 5px solid #00ff66;
-        padding: 12px 15px;
-        margin-bottom: 8px;
-        box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.05), 0 0 10px rgba(0, 255, 102, 0.1);
-        position: relative;
-    }
-    .terminal-feed::before {
-        content: '>>_';
-        position: absolute;
-        right: 10px;
-        bottom: 10px;
-        opacity: 0.5;
-        animation: blink 1s infinite;
+        font-family: 'JetBrains Mono', monospace;
+        color: #E2E8F0;
+        background-color: #0F172A;
+        border: 1px solid #1E293B;
+        border-left: 4px solid #34D399;
+        border-radius: 6px;
+        padding: 14px 18px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
     }
     .terminal-feed.danger {
-        color: #ff2a2a;
-        border-color: #ff2a2a;
-        border-left-color: #ff2a2a;
-        background-color: rgba(255, 42, 42, 0.05);
-        box-shadow: inset 0 0 10px rgba(255, 42, 42, 0.1), 0 0 15px rgba(255, 42, 42, 0.2);
+        color: #FECACA;
+        border-left-color: #F87171;
+        background-color: rgba(248, 113, 113, 0.05);
     }
     
-    .stDataFrame { border: 1px solid rgba(177, 66, 255, 0.4); border-radius: 2px; }
-    hr { border-color: rgba(0, 229, 255, 0.1) !important; box-shadow: 0 0 10px rgba(0,229,255,0.2); }
+    .stDataFrame { border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; overflow: hidden; }
+    hr { border-color: rgba(255, 255, 255, 0.08) !important; margin: 2rem 0; }
+    
+    /* EXPANDERS */
     .streamlit-expanderHeader {
-        font-family: 'Rajdhani', sans-serif;
-        color: #00e5ff !important;
-        background-color: rgba(177, 66, 255, 0.1) !important;
-        border-radius: 2px;
-        border: 1px solid rgba(177, 66, 255, 0.3) !important;
+        font-family: 'Inter', sans-serif;
+        color: #E2E8F0 !important;
+        background-color: rgba(30, 41, 59, 0.5) !important;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        font-weight: 500;
     }
 </style>
 """, unsafe_allow_html=True)
 
-def cyber_metric(label, value, accent_color="#00e5ff", text_color="#00ff66"):
+def cyber_metric(label, value, accent_color="#38BDF8", text_color="#F8FAFC"):
     return f"""
     <div class="cyber-hud-card" style="--hud-color: {accent_color}; --text-color: {text_color};">
-        <div class="hud-corner-tr"></div>
-        <div class="hud-corner-bl"></div>
         <div class="cyber-label">{label}</div>
         <div class="cyber-value">{value}</div>
     </div>
@@ -867,10 +784,10 @@ elif page == "🌍 Attack World Map":
         if sim_mode and not has_real_external:
             st.markdown("""
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
-                <div style="width:12px;height:12px;border-radius:50%;background:#bd00ff;
-                            animation:pulse_dot 1.5s infinite;box-shadow:0 0 8px #bd00ff;"></div>
-                <span style="font-family:'Rajdhani',sans-serif;color:#bd00ff;font-weight:700;
-                             letter-spacing:2px;text-transform:uppercase;font-size:0.85rem;">
+                <div style="width:12px;height:12px;border-radius:50%;background:#38BDF8;
+                            animation:pulse_dot 1.5s infinite;box-shadow:0 0 8px #38BDF8;"></div>
+                <span style="font-family:'Inter',sans-serif;color:#38BDF8;font-weight:600;
+                             letter-spacing:1px;text-transform:uppercase;font-size:0.85rem;">
                     GEO-SIMULATION — Localhost sessions mapped to realistic global origins
                 </span>
             </div>
@@ -889,26 +806,30 @@ elif page == "🌍 Attack World Map":
                 size="count",
                 hover_name="country",
                 hover_data=["city", "ip", "attack_type", "count"],
-                projection="natural earth",
+                projection="orthographic",
                 title="Global Attack Origins"
             )
 
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font_color="white",
+                font_color="#F8FAFC",
                 geo=dict(
                     bgcolor="rgba(0,0,0,0)",
                     showland=True,
-                    landcolor="#13151c",
+                    landcolor="#1E293B",
                     showocean=True,
-                    oceancolor="#0a0b10",
+                    oceancolor="#0F172A",
                     showlakes=True,
-                    lakecolor="#0a0b10",
+                    lakecolor="#0F172A",
                     showcountries=True,
-                    countrycolor="#bd00ff"
+                    countrycolor="#334155",
+                    resolution=50,
+                    showframe=False,
+                    projection_rotation=dict(lon=10, lat=20, roll=0)
                 ),
-                height=600
+                height=600,
+                margin={"r":0,"t":40,"l":0,"b":0}
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -925,7 +846,7 @@ elif page == "🌍 Attack World Map":
                     x="Country",
                     y="Attack Count",
                     color="Attack Count",
-                    color_continuous_scale=["#00e5ff", "#bd00ff", "#ff2a2a"]
+                    color_continuous_scale=["#38BDF8", "#A855F7", "#F87171"]
                 )
                 fig2.update_layout(
                     paper_bgcolor="rgba(0,0,0,0)",

@@ -1,4 +1,4 @@
-import tim
+import time
 import mysql.connector
 import subprocess
 import ollama

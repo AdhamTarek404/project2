@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🛡️  Starting NeuralTrap System..."
+echo "🛡️  Starting NeuralTrap System...
 echo "=================================================="
 
 # Start MariaDB

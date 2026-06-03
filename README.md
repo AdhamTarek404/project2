@@ -357,9 +357,12 @@ NeuralTrap uses **10 MySQL tables** to store all intelligence:
 
 ---
 
-## 👥 Authors
+## 👥 Team Members & Responsibilities
 
-- **Adham Tarek** — Developer & Security Researcher
+- **Marwan Hassan** — System Architect & Deception Layer (Cowrie honeypot implementation, network configuration, and system integration).
+- **Mohamed Khaled, Adham Tarek, Nader Elsayed** — AI Engine & Generative AI Analyst (LLM integration via Ollama, prompt engineering, threat classification, forensic reporting, malware analysis, and honeytoken generation).
+- **Mohamed Hatem, Shehab El-Din Yousry, Youssef Medhat** — Backend & Data Pipeline (neuraltrap.py core engine, MySQL schema design, event processing pipeline, and iptables firewall integration).
+- **Abdelrhman Emad, Hamed Ahmed** — Dashboard & Visualization (Streamlit dashboard, Plotly charts, GeoIP world map, and UI design).
 
 ---
 

@@ -4,7 +4,7 @@ One-shot: create missing MySQL tables for NeuralTrap + Cowrie intel.
 Run after installing MySQL / before streamlit if you have not started neuraltrap yet:
 
     python init_db.py
-"""
+""
 import mysql.connector
 from db_schema import ensure_schema
 

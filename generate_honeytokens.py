@@ -1,5 +1,5 @@
 import os
-import ollama
+import ollam
 
 # Default Cowrie honeyfs path (change if needed)
 HONEYFS_DIR = "/home/kali/cowrie/honeyfs"

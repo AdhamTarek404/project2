@@ -1,7 +1,7 @@
 """
 Legacy attack_logs writer. neuraltrap.py already inserts into attack_logs with the
 same schema — run only one of them against a live Cowrie instance to avoid duplicates.
-"""
+""
 import json
 import mysql.connector
 import os

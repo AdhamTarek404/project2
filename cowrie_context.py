@@ -1,6 +1,6 @@
 """
 Helpers for Cowrie JSON enrichment: timestamps, TTY paths, LLM-safe session intel.
-"""
+""
 from __future__ import annotations
 
 import json

@@ -1,7 +1,7 @@
 import mysql.connector
 import ollama
 import json
-from datetime import datetim
+from datetime import datetime
 
 # Database connection
 db = mysql.connector.connect(
